@@ -24,12 +24,22 @@ AWS.config.update({
 export const s3 = new AWS.S3();
 
 // --- Nodemailer (SendGrid) ---
-export const transporter = nodemailer.createTransport({
+export const transporterColectora = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.sendgrid.net',
   port: process.env.EMAIL_PORT || 587,
   secure: false,
   auth: {
     user: process.env.EMAIL_USER || 'apikey',
     pass: process.env.SENDGRID_API_KEY_COLECTORA,
+  },
+});
+
+export const transporterVidaDeudor = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.sendgrid.net',
+  port: process.env.EMAIL_PORT || 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER || 'apikey',
+    pass: process.env.SENDGRID_API_KEY_VIDADEUDOR,
   },
 });

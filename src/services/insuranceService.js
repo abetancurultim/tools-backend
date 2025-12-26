@@ -1,4 +1,4 @@
-import { supabaseVidaDeudor, transporter } from '../config/clients.js';
+import { supabaseVidaDeudor, transporterVidaDeudor } from '../config/clients.js';
 
 // --- LÓGICA DE BASE DE DATOS ---
 export const saveInterestedClient = async (clientData) => {
@@ -136,7 +136,7 @@ const sendActivationEmails = async (data) => {
 
 const sendMailHelper = async (to, subject, html) => {
   const ccList = process.env.SUPERVISOR_CC_VIDADEUDOR ? process.env.SUPERVISOR_CC_VIDADEUDOR.split(',') : [];
-  return await transporter.sendMail({
+  return await transporterVidaDeudor.sendMail({
     from: process.env.EMAIL_FROM_VIDADEUDOR || '"Seguros IA" <grow@ultimmarketing.com>',
     to,
     cc: ccList.length ? ccList : undefined,

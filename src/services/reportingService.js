@@ -1,4 +1,4 @@
-import { s3, transporter } from '../config/clients.js';
+import { s3, transporterColectora } from '../config/clients.js';
 
 // --- S3 Logic ---
 export const uploadCallDataToS3 = async (callData) => {
@@ -38,7 +38,7 @@ export const sendSuccessfulCallNotification = async (callData, s3Result) => {
   `;
 
   try {
-    await transporter.sendMail({
+    await transporterColectora.sendMail({
       from: process.env.EMAIL_FROM_COLECTORA,
       to: supervisorEmail,
       subject: `🎯 Llamada Exitosa - ${name}`,

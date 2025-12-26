@@ -1,0 +1,4 @@
+node_modules
+.env
+.env_colectora
+.env_bienestar

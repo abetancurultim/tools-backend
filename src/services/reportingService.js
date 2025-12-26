@@ -7,7 +7,7 @@ export const uploadCallDataToS3 = async (callData) => {
   const fileName = `llamada_${name.replace(/\s+/g, '_')}_${now.getTime()}.json`;
 
   const params = {
-    Bucket: process.env.AWS_S3_BUCKET || 'bucket-raw-latam',
+    Bucket: process.env.AWS_S3_BUCKET_COLECTORA || 'bucket-raw-latam',
     Key: `ultim/${fileName}`,
     Body: JSON.stringify(callData, null, 2),
     ContentType: 'application/json',
@@ -25,7 +25,7 @@ export const uploadCallDataToS3 = async (callData) => {
 // --- Email Logic ---
 export const sendSuccessfulCallNotification = async (callData, s3Result) => {
   const { name, number, transcript, duration, callSid } = callData;
-  const supervisorEmail = process.env.SUPERVISOR_EMAIL;
+  const supervisorEmail = process.env.SUPERVISOR_EMAIL_COLECTORA;
 
   const htmlContent = `
     <h2>✅ Llamada Exitosa</h2>
@@ -39,7 +39,7 @@ export const sendSuccessfulCallNotification = async (callData, s3Result) => {
 
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+      from: process.env.EMAIL_FROM_COLECTORA,
       to: supervisorEmail,
       subject: `🎯 Llamada Exitosa - ${name}`,
       html: htmlContent,

@@ -76,7 +76,7 @@ export const processClientRegistration = async (clientData) => {
 
 const sendInsuranceInterestNotification = async (interestData) => {
   const { clientName, clientPhone, interestLevel = 'alto', notes = '', contactPreference, transcript, callSid } = interestData;
-  const supervisorEmail = process.env.SUPERVISOR_EMAIL;
+  const supervisorEmail = process.env.SUPERVISOR_EMAIL_VIDADEUDOR;
 
   // Configuración visual según interés
   const interestConfig = {
@@ -117,7 +117,7 @@ const sendActivationEmails = async (data) => {
   try {
     const subjectSup = `${wasExisting ? '🔄 REACTIVACIÓN' : '🎉 NUEVA ACTIVACIÓN'} - Vida Deudor - ${name}`;
     const htmlSup = getSupervisorActivationTemplate(data);
-    await sendMailHelper(process.env.SUPERVISOR_EMAIL, subjectSup, htmlSup);
+    await sendMailHelper(process.env.SUPERVISOR_EMAIL_VIDADEUDOR, subjectSup, htmlSup);
     results.supervisor = true;
   } catch (e) { console.error('Error email supervisor:', e); }
 
@@ -135,9 +135,9 @@ const sendActivationEmails = async (data) => {
 // --- HELPERS (ENVÍO Y TEMPLATES) ---
 
 const sendMailHelper = async (to, subject, html) => {
-  const ccList = process.env.SUPERVISOR_CC ? process.env.SUPERVISOR_CC.split(',') : [];
+  const ccList = process.env.SUPERVISOR_CC_VIDADEUDOR ? process.env.SUPERVISOR_CC_VIDADEUDOR.split(',') : [];
   return await transporter.sendMail({
-    from: process.env.EMAIL_FROM || '"Seguros IA" <grow@ultimmarketing.com>',
+    from: process.env.EMAIL_FROM_VIDADEUDOR || '"Seguros IA" <grow@ultimmarketing.com>',
     to,
     cc: ccList.length ? ccList : undefined,
     subject,

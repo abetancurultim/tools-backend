@@ -11,6 +11,6 @@ app.use(express.json());
 
 app.use('/api/v1', apiRoutes);
 
-app.get('/', (req, res) => res.send('Ultim Tools API is running 🚀'));
+app.get('/health', (req, res) => res.send('Ultim Tools API is running 🚀'));
 
 export default app;

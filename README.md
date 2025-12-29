@@ -93,9 +93,9 @@ All routes are prefixed with `/api/v1` (based on common structure).
 - **Desc**: Processes ElevenLabs call data, uploads to S3, and emails supervisor.
 - **Payload**: Full ElevenLabs JSON object (requires `callSid`, `name`, `transcript`).
 
-### 3. Insurance Unified (Interest + Registration)
+### 3. Insurance Unified (Registration + Activation)
 `POST /api/v1/insurance-registration` o `POST /api/v1/insurance-interest`
-- **Desc**: Proceso unificado que notifica interés al supervisor, registra al cliente en la BD y envía correos de activación/bienvenida.
+- **Desc**: Proceso unificado que registra al cliente en la BD y envía correos de activación/bienvenida (al supervisor y al cliente).
 - **Payload**: 
   ```json
   { 
@@ -107,5 +107,5 @@ All routes are prefixed with `/api/v1` (based on common structure).
     "callSid": "..." 
   }
   ```
-- **Nota**: Ambos endpoints ahora ejecutan la misma lógica completa.
+- **Nota**: Ambos endpoints ejecutan el registro y la activación. No se envía correo de "interés" por separado.
 

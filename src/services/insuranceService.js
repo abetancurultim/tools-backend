@@ -47,18 +47,28 @@ export const processInterestNotification = async (interestData) => {
 
 // Caso B: Registro completo y Activación (Venta cerrada)
 export const processClientRegistration = async (clientData) => {
-  const { name, phone_number, email, document_id, callSid, transcript, timestamp } = clientData;
+  const { name, phone_number, email, document_id, callSid, transcript, timestamp, interestLevel = 'alto' } = clientData;
   
   console.log(`[REGISTRATION] Procesando registro: ${name}`);
 
-  // 1. Guardar en DB
+  // 1. Notificar Interés (Lead) - Se envía al supervisor al mismo tiempo
+  const interestResult = await processInterestNotification({
+    clientName: name,
+    clientPhone: phone_number,
+    interestLevel,
+    transcript,
+    callSid,
+    notes: 'Registro automático desde proceso unificado'
+  });
+
+  // 2. Guardar en DB
   const saveResult = await saveInterestedClient({ name, phone_number, email, document_id });
   
   if (!saveResult.success) {
-    return { success: false, error: 'Error guardando en BD', details: saveResult.error };
+    return { success: false, error: 'Error guardando en BD', details: saveResult.error, interestResult };
   }
 
-  // 2. Enviar correos de activación
+  // 3. Enviar correos de activación
   const emailResults = await sendActivationEmails({
     name, phone_number, email, document_id,
     callSid, transcript, timestamp,
@@ -67,7 +77,7 @@ export const processClientRegistration = async (clientData) => {
 
   return {
     success: true,
-    data: { client: saveResult.data, existed: saveResult.existed, emailResults },
+    data: { client: saveResult.data, existed: saveResult.existed, emailResults, interestResult },
     message: saveResult.existed ? 'Cliente reactivado' : 'Cliente registrado y activado'
   };
 };

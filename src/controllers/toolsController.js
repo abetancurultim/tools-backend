@@ -36,40 +36,42 @@ export const handleProcessCall = async (req, res) => {
   }
 };
 
-// Tool 3: Notificar Interés (Lead caliente, sin comprar aún)
-export const handleInsuranceInterest = async (req, res) => {
-  try {
-    const interestData = req.body;
-    // Validaciones básicas
-    if (!interestData.clientName || !interestData.clientPhone) {
-      return res.status(400).json({ error: 'Faltan datos del cliente (nombre, teléfono)' });
-    }
-
-    const result = await insuranceService.processInterestNotification(interestData);
-    res.json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error procesando interés de seguro' });
-  }
-};
-
-// Tool 4: Registrar y Activar Cliente (Venta cerrada)
+// Tool 3 & 4: Proceso Unificado de Seguro (Interés + Registro)
+// Ahora ambos endpoints ejecutan la misma lógica: notificar interés y registrar cliente
 export const handleInsuranceRegistration = async (req, res) => {
   try {
-    const registrationData = req.body;
+    const data = req.body;
     
-    // Validación de campos críticos para la BD
+    // Normalizar datos para soportar ambos formatos de payload (interest y registration)
+    const normalizedData = {
+      name: data.name || data.clientName,
+      phone_number: data.phone_number || data.clientPhone,
+      email: data.email,
+      document_id: data.document_id,
+      callSid: data.callSid,
+      transcript: data.transcript,
+      timestamp: data.timestamp,
+      interestLevel: data.interestLevel || 'alto'
+    };
+
+    // Validación de campos críticos para el proceso completo
     const required = ['name', 'phone_number', 'email', 'document_id'];
-    const missing = required.filter(field => !registrationData[field]);
+    const missing = required.filter(field => !normalizedData[field]);
 
     if (missing.length > 0) {
-      return res.status(400).json({ error: `Faltan campos requeridos: ${missing.join(', ')}` });
+      return res.status(400).json({ 
+        error: `Faltan campos requeridos para el proceso unificado: ${missing.join(', ')}`,
+        ayuda: 'Asegúrese de enviar name/clientName, phone_number/clientPhone, email y document_id'
+      });
     }
 
-    const result = await insuranceService.processClientRegistration(registrationData);
+    const result = await insuranceService.processClientRegistration(normalizedData);
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error en el proceso de registro de seguro' });
+    res.status(500).json({ error: 'Error en el proceso unificado de seguro' });
   }
 };
+
+// Mantener el export para compatibilidad con las rutas, pero usando la misma lógica
+export const handleInsuranceInterest = handleInsuranceRegistration;

@@ -92,29 +92,20 @@ Esta herramienta permite al agente registrar al cliente en la base de datos (Sup
         "required": ["name", "document_id", "number", "email", "callSid", "transcript", "timestamp"]
     }
     ```
-### D. Herramienta: Procesar Llamada Finalizada
-Esta herramienta permite al agente procesar la llamada finalizada y subir la transcripción a AWS S3.
-* **Name:** `ProcessCallLog`
-* **Description:** `Procesa la llamada finalizada y sube la transcripción a AWS S3.`
-* **URL:** `httpS://<RAILWAY_URL>/api/v1/process-call`
+### D. Webhook: Procesar Llamada Finalizada (Post-call Webhook)
+Este endpoint se configura en la sección de **Webhooks** del agente en ElevenLabs para recibir la transcripción automáticamente al finalizar la llamada.
+
+* **URL:** `https://<RAILWAY_URL>/api/v1/process-call`
 * **Method:** `POST`
-* **Headers:**
-    *   `x-api-key`: `{{API_KEY}}`
-    *   `Content-Type`: `application/json`
-* **Schema:**
-    ```json
-    {
-        "type": "object",
-        "properties": {
-            "callSid": { "type": "string", "description": "Identificador de la llamada" },
-            "name": { "type": "string", "description": "Nombre del cliente" },
-            "number": { "type": "string", "description": "Teléfono del cliente" },
-            "transcript": { "type": "string", "description": "Transcripción de la llamada" },
-            "timestamp": { "type": "string", "description": "Fecha y hora de la llamada" }
-        },
-        "required": ["name", "number", "callSid", "transcript", "timestamp"]
-    }
-    ```
+* **Authentication:** `HMAC`
+* **Secret:** El valor de `ELEVENLABS_WEBHOOK_SECRET` (ej. `wsec_...`)
+* **Header:** `X-ElevenLabs-Signature-256`
+
+### E. Herramientas (Tools)
+Las herramientas se configuran en la sección de **Tools** y utilizan `x-api-key` para autenticación.
+
+#### Herramienta: Consultar Deuda
+(Ver configuración arriba)
 
 # NOTA IMPORTANTE:
 Estos son solo ejemplos de configuración, por favor, ajusta los nombres y descripciones según los datos exactos que requiere cada petición para que la herramienta funcione correctamente.

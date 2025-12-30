@@ -2,14 +2,24 @@ import { s3, transporterColectora } from '../config/clients.js';
 
 // --- S3 Logic ---
 export const uploadCallDataToS3 = async (callData) => {
-  const { name, number, callSid, transcript } = callData;
+  const { name, number, cleanTranscript, document_id, duration } = callData;
   const now = new Date();
   const fileName = `llamada_${name.replace(/\s+/g, '_')}_${now.getTime()}.json`;
+
+  // Estructura estricta solicitada por el usuario
+  const payloadToSave = {
+    name: name,
+    document_id: document_id || '',
+    pagaduria: callData.pagaduria || '',
+    duration: duration,
+    number: number,
+    transcription: cleanTranscript || [] // Array estructurado
+  };
 
   const params = {
     Bucket: process.env.AWS_S3_BUCKET_COLECTORA || 'bucket-raw-latam',
     Key: `ultim/${fileName}`,
-    Body: JSON.stringify(callData, null, 2),
+    Body: JSON.stringify(payloadToSave, null, 2),
     ContentType: 'application/json',
   };
 

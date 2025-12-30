@@ -21,11 +21,72 @@ export const handleGetDebts = async (req, res) => {
 // Tool 2: Procesar Llamada Exitosa (Log + Email)
 export const handleProcessCall = async (req, res) => {
   try {
-    const callData = req.body; // ElevenLabs envía el JSON completo aquí
+    const rawData = req.body;
+    // console.log('--> Payload recibido en /process-call:', JSON.stringify(rawData, null, 2));
+
+    let callData = {};
+
+    // Detectar si es payload de ElevenLabs (NUEVO FORMATO: wrapper "data")
+    // El payload real tiene la info dentro de una propiedad 'data'
+    const payloadData = rawData.data || rawData; // Fallback para pruebas planas
+
+    if (payloadData.conversation_id) {
+      console.log('Recibido Webhook de ElevenLabs:', payloadData.conversation_id);
+      
+      // Formatear transcripción
+      let cleanTranscript = [];
+      let formattedTranscript = '';
+      
+      if (Array.isArray(payloadData.transcript)) {
+          // Versión Array para S3 (Limpia)
+          cleanTranscript = payloadData.transcript.map(t => ({
+              role: t.role,
+              message: t.message
+          }));
+
+          // Versión String para Email (Legible)
+          formattedTranscript = payloadData.transcript
+            .map(t => `${t.role}: ${t.message}`)
+            .join('\n');
+      } else {
+          formattedTranscript = payloadData.transcript || '';
+      }
+
+      // Extracción de metadatos basada en el JSON real recibido
+      const dynamicVars = payloadData.conversation_initiation_client_data?.dynamic_variables || {};
+      const metadataResult = payloadData.analysis?.data_collection_results || {};
+      const phoneData = payloadData.metadata?.phone_call || {};
+
+      callData = {
+        callSid: payloadData.conversation_id,
+        // Prioridad: 1. Data Collection Result, 2. Variable dinámica user_name, 3. Default
+        name: metadataResult.name?.value || dynamicVars.user_name || 'Cliente ElevenLabs',
+        // Prioridad: 1. Data Collection Result, 2. Número real de la llamada, 3. Variable dynamic
+        number: metadataResult.phone_number?.value || phoneData.external_number || dynamicVars.system__called_number || 'Desconocido',
+        
+        // Datos específicos solicitados
+        document_id: dynamicVars.document_id || dynamicVars.identification_doc || '',
+        pagaduria: dynamicVars.pagaduria || dynamicVars.entity || '', // Intentar leer pagaduria
+        duration: payloadData.metadata?.call_duration_secs || payloadData.duration_seconds || 0,
+        
+        cleanTranscript: cleanTranscript, // Para S3
+        transcript: formattedTranscript   // Para Email
+      };
+
+      console.log('Datos procesados:', JSON.stringify({
+        name: callData.name,
+        docs: callData.document_id,
+        msgs: callData.cleanTranscript.length
+      }, null, 2));
+
+    } else {
+      // Formato Legacy/Manual
+      callData = rawData;
+    }
     
-    // Validaciones básicas
-    if (!callData.callSid || !callData.name) {
-      return res.status(400).json({ error: 'Faltan datos de la llamada (callSid, name)' });
+    // Validaciones básicas actualizadas
+    if (!callData.callSid) {
+      return res.status(400).json({ error: 'Faltan datos críticos (callSid)' });
     }
 
     const result = await reportingService.processCallLog(callData);

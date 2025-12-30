@@ -34,18 +34,32 @@ Permite consultar las obligaciones pendientes de un cliente utilizando su númer
 
 ---
 
-## 2. Procesar Llamada Finalizada
+## 2. Procesar Llamada Finalizada (Webhook ElevenLabs)
 **Endpoint:** `POST /api/v1/process-call`
 
-Registra el log de una llamada, sube la transcripción a AWS S3 y envía un correo de notificación.
+Este endpoint ahora utiliza validación **HMAC SHA256** para simular el comportamiento de ElevenLabs.
 
 ### Headers
 | Key | Value |
 | :--- | :--- |
-| x-api-key | `{{API_KEY}}` |
+| X-ElevenLabs-Signature-256 | `<FIRMA_GENERADA>` |
 | Content-Type | `application/json` |
 
-### Body (JSON)
+### Cómo probar en Postman:
+
+Para probar este endpoint, necesitas generar una firma válida basada en el cuerpo del JSON y tu secreto.
+
+1.  En Postman, ve a la pestaña **Pre-request Script** de la petición.
+2.  Pega el siguiente código (ajusta el secreto):
+
+```javascript
+const secret = "wsec_be67957e54bbfcd6aaa281dfe3ae0a67b4030bb56ad41c8f0dd5a0435db0acdb";
+const body = pm.request.body.raw;
+const hash = CryptoJS.HmacSHA256(body, secret).toString(CryptoJS.enc.Hex);
+pm.request.headers.add({key: 'X-ElevenLabs-Signature-256', value: hash});
+```
+
+3.  En el **Body (JSON)**, usa este ejemplo:
 ```json
 {
   "callSid": "CA12345abcde6789",

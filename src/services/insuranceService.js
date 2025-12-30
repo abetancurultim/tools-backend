@@ -47,7 +47,7 @@ export const processInterestNotification = async (interestData) => {
 
 // Caso B: Registro completo y Activación (Venta cerrada)
 export const processClientRegistration = async (clientData) => {
-  const { name, phone_number, email, document_id, callSid, transcript, timestamp } = clientData;
+  const { name, phone_number, email, document_id, timestamp } = clientData;
   
   console.log(`[REGISTRATION] Procesando registro: ${name}`);
 
@@ -60,9 +60,7 @@ export const processClientRegistration = async (clientData) => {
 
   // 2. Enviar correos de activación
   const emailResults = await sendActivationEmails({
-    name, phone_number, email, document_id,
-    callSid, transcript, timestamp,
-    wasExisting: saveResult.existed
+    name, phone_number, email, document_id, timestamp, wasExisting: saveResult.existed
   });
 
   return {
@@ -75,7 +73,7 @@ export const processClientRegistration = async (clientData) => {
 // --- LÓGICA DE EMAILS (INTERNA) ---
 
 const sendInsuranceInterestNotification = async (interestData) => {
-  const { clientName, clientPhone, interestLevel = 'alto', notes = '', contactPreference, transcript, callSid } = interestData;
+  const { clientName, clientPhone, interestLevel = 'alto', notes = '', contactPreference } = interestData;
   const supervisorEmail = process.env.SUPERVISOR_EMAIL_VIDADEUDOR;
 
   // Configuración visual según interés
@@ -95,9 +93,6 @@ const sendInsuranceInterestNotification = async (interestData) => {
       <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
         <strong>Notas:</strong> ${notes}
       </div>
-      <h3>Transcripción:</h3>
-      <pre style="white-space: pre-wrap; font-size: 12px;">${transcript}</pre>
-      <p><small>SID: ${callSid}</small></p>
     </div>
   `;
 
@@ -155,8 +150,6 @@ const getSupervisorActivationTemplate = ({ name, phone_number, email, document_i
       <li><strong>Email:</strong> ${email}</li>
       <li><strong>Cédula:</strong> ${document_id}</li>
     </ul>
-    <h3>Transcripción:</h3>
-    <pre style="background: #eee; padding: 10px;">${transcript || 'N/A'}</pre>
   </div>
 `;
 

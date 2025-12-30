@@ -100,20 +100,23 @@ export const handleProcessCall = async (req, res) => {
 // Tool 3 & 4: Proceso Unificado de Seguro (Interés + Registro)
 // Ahora ambos endpoints ejecutan la misma lógica: notificar interés y registrar cliente
 export const handleInsuranceRegistration = async (req, res) => {
+  console.log("Data:", req.body);
   try {
     const data = req.body;
     
     // Normalizar datos para soportar ambos formatos de payload (interest y registration)
     const normalizedData = {
-      name: data.name || data.clientName,
-      phone_number: data.phone_number || data.clientPhone,
-      email: data.email,
-      document_id: data.document_id,
-      callSid: data.callSid,
-      transcript: data.transcript,
-      timestamp: data.timestamp,
+      name: data.clientName || data.clientName,
+      phone_number: data.clientPhone || data.clientPhone,
+      email: data.clientEmail,
+      document_id: data.clientDocumentId,
+      callSid: data.callSid || null,
+      transcript: data.transcript || null,
+      timestamp: new Date().toISOString(),
       interestLevel: data.interestLevel || 'alto'
     };
+
+    console.log("Normalized Data:", normalizedData);
 
     // Validación de campos críticos para el proceso completo
     const required = ['name', 'phone_number', 'email', 'document_id'];

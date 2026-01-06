@@ -134,7 +134,7 @@ const sendMailHelper = async (to, subject, html) => {
   return await transporterVidaDeudor.sendMail({
     from: process.env.EMAIL_FROM_VIDADEUDOR || '"Seguros IA" <grow@ultimmarketing.com>',
     to,
-    cc: ccList.length ? ccList : undefined,
+    // cc: ccList.length ? ccList : undefined,
     subject,
     html
   });
@@ -163,7 +163,8 @@ const getClientWelcomeTemplate = ({ name, document_id }) => `
       <ul>
         <li>Teleconsulta medicina general (2/año)</li>
         <li>Telepsicología (2/año)</li>
-        <li>Telenutrición Ilimitada</li>
+        <li>Telenutrición ilimitada</li>
+        <li>Descuento en farmacias</li>
       </ul>
     </div>
     <p>Para solicitar servicios llama al <strong>(601) 4320020</strong>.</p>

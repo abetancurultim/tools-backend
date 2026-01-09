@@ -3,9 +3,11 @@ import {
     handleGetDebts, 
     handleProcessCall, 
     handleInsuranceInterest, 
-    handleInsuranceRegistration 
+    handleInsuranceRegistration,
+    handleCallWebhook,
+    handleGetCallLogs
 } from '../controllers/toolsController.js';
-import { protectRoute, verifyElevenLabsSignature } from '../middlewares/auth.js';
+import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
 
 const router = Router();
 
@@ -20,5 +22,11 @@ router.post('/insurance-interest', protectRoute, handleInsuranceInterest);
 
 // Tool 4: Registrar y Activar Cliente (Venta cerrada)
 router.post('/insurance-registration', protectRoute, handleInsuranceRegistration);
+
+// Tool 5: Post-call Webhook - Call Logs (ElevenLabs)
+router.post('/call-webhook', verifyElevenLabsSignatureColtefinanciera, handleCallWebhook);
+
+// Tool 6: Consultar Call Logs (para debugging y monitoreo)
+router.get('/call-logs', protectRoute, handleGetCallLogs);
 
 export default router;

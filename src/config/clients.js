@@ -15,6 +15,11 @@ const supabaseUrlVidaDeudor = process.env.SUPABASE_URL_VIDADEUDOR;
 const supabaseKeyVidaDeudor = process.env.SUPABASE_KEY_VIDADEUDOR;
 export const supabaseVidaDeudor = createClient(supabaseUrlVidaDeudor, supabaseKeyVidaDeudor);
 
+// --- Supabase Coltefinanciera Recordatorios ---
+const supabaseUrlColtefinancieraRecordatorios = process.env.SUPABASE_URL_COLTEFINANCIERA_RECORDATORIOS;
+const supabaseKeyColtefinancieraRecordatorios = process.env.SUPABASE_KEY_COLTEFINANCIERA_RECORDATORIOS;
+export const supabaseColtefinancieraRecordatorios = createClient(supabaseUrlColtefinancieraRecordatorios, supabaseKeyColtefinancieraRecordatorios);
+
 // --- AWS S3 ---
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID_COLECTORA,

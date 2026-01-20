@@ -1,6 +1,7 @@
 import * as debtService from '../services/debtService.js';
 import * as reportingService from '../services/reportingService.js';
 import * as insuranceService from '../services/insuranceService.js';
+import * as callLogsService from '../services/callLogsService.js';
 import * as elevenLabsService from '../services/elevenLabsService.js';
 
 // Tool 1: Consultar Deudas
@@ -140,6 +141,75 @@ export const handleInsuranceRegistration = async (req, res) => {
 
 // Mantener el export para compatibilidad con las rutas, pero usando la misma lógica
 export const handleInsuranceInterest = handleInsuranceRegistration;
+
+// Tool 5: Post-call Webhook - ElevenLabs Call Logs
+export const handleCallWebhook = async (req, res) => {
+  try {
+    console.log('[Webhook] Recibido post-call webhook de ElevenLabs');
+    
+    const payload = req.body;
+    
+    // Log del payload recibido (sin exponer datos sensibles en producción)
+    console.log('[Webhook] Payload keys:', Object.keys(payload));
+    
+    // Procesar el webhook usando el servicio
+    const result = await callLogsService.processElevenLabsWebhook(payload);
+    
+    if (!result.success) {
+      console.error('[Webhook] Error procesando:', result.error);
+      return res.status(400).json({ 
+        error: 'Error procesando webhook',
+        details: result.error 
+      });
+    }
+    
+    // Respuesta rápida a ElevenLabs
+    console.log('[Webhook] ✅ Webhook procesado exitosamente');
+    res.status(200).json({ 
+      message: 'Webhook recibido y procesado',
+      conversation_id: result.data?.conversation_id,
+      existed: result.existed || false
+    });
+    
+  } catch (error) {
+    console.error('[Webhook] Error inesperado:', error);
+    res.status(500).json({ error: 'Error interno procesando webhook' });
+  }
+};
+
+// Tool 6: Consultar Call Logs (para debugging y monitoreo)
+export const handleGetCallLogs = async (req, res) => {
+  try {
+    const { agent_id, call_successful, call_status, call_name, limit } = req.query;
+    
+    const filters = {};
+    if (agent_id) filters.agent_id = agent_id;
+    if (call_successful !== undefined) filters.call_successful = call_successful;
+    if (call_status) filters.call_status = call_status;
+    if (call_name) filters.call_name = call_name;
+    
+    const limitNum = limit ? parseInt(limit) : 50;
+    
+    const result = await callLogsService.getCallLogs(filters, limitNum);
+    
+    if (!result.success) {
+      return res.status(500).json({ 
+        error: 'Error consultando logs',
+        details: result.error 
+      });
+    }
+    
+    res.json({
+      success: true,
+      count: result.count,
+      logs: result.data
+    });
+    
+  } catch (error) {
+    console.error('[CallLogs] Error consultando:', error);
+    res.status(500).json({ error: 'Error interno consultando logs' });
+  }
+};
 
 // Tool 5: Obtener detalles de conversación de ElevenLabs
 export const handleGetConversationDetails = async (req, res) => {

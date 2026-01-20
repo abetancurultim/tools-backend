@@ -4,9 +4,11 @@ import {
     handleProcessCall, 
     handleInsuranceInterest, 
     handleInsuranceRegistration,
+    handleCallWebhook,
+    handleGetCallLogs,
     handleGetConversationDetails
 } from '../controllers/toolsController.js';
-import { protectRoute, verifyElevenLabsSignature } from '../middlewares/auth.js';
+import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
 
 const router = Router();
 
@@ -21,8 +23,5 @@ router.post('/insurance-interest', protectRoute, handleInsuranceInterest);
 
 // Tool 4: Registrar y Activar Cliente (Venta cerrada)
 router.post('/insurance-registration', protectRoute, handleInsuranceRegistration);
-
-// Tool 5: Obtener detalles de conversación de ElevenLabs (Dashboard)
-router.get('/elevenlabs/conversation/:conversation_id', protectRoute, handleGetConversationDetails);
 
 export default router;

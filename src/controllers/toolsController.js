@@ -1,6 +1,7 @@
 import * as debtService from '../services/debtService.js';
 import * as reportingService from '../services/reportingService.js';
 import * as insuranceService from '../services/insuranceService.js';
+import * as elevenLabsService from '../services/elevenLabsService.js';
 
 // Tool 1: Consultar Deudas
 export const handleGetDebts = async (req, res) => {
@@ -139,3 +140,24 @@ export const handleInsuranceRegistration = async (req, res) => {
 
 // Mantener el export para compatibilidad con las rutas, pero usando la misma lógica
 export const handleInsuranceInterest = handleInsuranceRegistration;
+
+// Tool 5: Obtener detalles de conversación de ElevenLabs
+export const handleGetConversationDetails = async (req, res) => {
+  try {
+    const { conversation_id } = req.params;
+
+    if (!conversation_id) {
+      return res.status(400).json({ error: 'conversation_id es requerido' });
+    }
+
+    const data = await elevenLabsService.getConversationDetails(conversation_id);
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    const status = error.message.includes('No encontrado') || error.message.includes('Not Found') ? 404 : 500;
+    res.status(status).json({ 
+        error: 'Error obteniendo detalles de la conversación', 
+        details: error.message 
+    });
+  }
+};

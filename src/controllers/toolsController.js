@@ -231,3 +231,48 @@ export const handleGetConversationDetails = async (req, res) => {
     });
   }
 };
+
+// Tool 6: Proceso Bienestar Plus (Registro)
+export const handleBienestarRegistration = async (req, res) => {
+  console.log("Data Bienestar:", req.body);
+  try {
+    const data = req.body;
+    
+    // Normalizar datos
+    const normalizedData = {
+      name: data.clientName || data.clientName,
+      phone_number: data.clientPhone || data.clientPhone,
+      email: data.clientEmail,
+      document_id: data.clientDocumentId,
+      callSid: data.callSid || null,
+      transcript: data.transcript || null,
+      timestamp: new Date().toISOString(),
+      interestLevel: data.interestLevel || 'alto'
+    };
+
+    console.log("Normalized Data Bienestar:", normalizedData);
+
+    const required = ['name', 'phone_number', 'email', 'document_id'];
+    const missing = required.filter(field => !normalizedData[field]);
+
+    if (missing.length > 0) {
+      return res.status(400).json({ 
+        error: `Faltan campos requeridos para Bienestar Plus: ${missing.join(', ')}`,
+        ayuda: 'Asegúrese de enviar name/clientName, phone_number/clientPhone, email y document_id'
+      });
+    }
+
+    const result = await insuranceService.processClientRegistrationBienestar(normalizedData);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error en el proceso de Bienestar Plus' });
+  }
+};
+
+export const handleBienestarInterest = async (req, res) => {
+    // Reutilizamos la lógica, similar a handleInsuranceInterest = handleInsuranceRegistration
+    // Pero si quisiéramos solo notificar sin guardar, llamaríamos a processInterestNotificationBienestar
+    // Como en el original handleInsuranceInterest = handleInsuranceRegistration, seguiré ese patrón.
+    return handleBienestarRegistration(req, res);
+};

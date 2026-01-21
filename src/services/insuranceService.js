@@ -170,3 +170,164 @@ const getClientWelcomeTemplate = ({ name, document_id }) => `
     <p>Para solicitar servicios llama al <strong>(601) 4320020</strong>.</p>
   </div>
 `;
+
+// --- SECCIÓN BIENESTAR PLUS ---
+
+// 1. BD Bienestar Plus
+export const saveInterestedClientBienestar = async (clientData) => {
+  const { name, phone_number, email, document_id } = clientData;
+  console.log(`[SUPABASE] Guardando cliente Bienestar Plus: ${name} (${document_id})`);
+
+  try {
+    // Verificar existencia
+    const { data: existingClient } = await supabaseVidaDeudor
+      .from('interesados_bienestar_plus')
+      .select('*')
+      .eq('document_id', document_id)
+      .single();
+
+    if (existingClient) {
+      return { success: true, existed: true, data: existingClient, message: 'Cliente Bienestar Plus ya registrado previamente' };
+    }
+
+    // Insertar nuevo
+    const currentDate = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabaseVidaDeudor
+      .from('interesados_bienestar_plus') // Nueva tabla
+      .insert([{
+        name, phone_number, email, document_id,
+        date: currentDate
+      }])
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return { success: true, existed: false, data, message: 'Cliente Bienestar Plus registrado exitosamente' };
+
+  } catch (error) {
+    console.error(`[SUPABASE] Error Bienestar Plus:`, error);
+    return { success: false, error: error.message };
+  }
+};
+
+// 2. Orquestadores Bienestar Plus
+
+// Caso A: Solo notificar interés (Lead) - Bienestar Plus
+export const processInterestNotificationBienestar = async (interestData) => {
+  return await sendInsuranceInterestNotificationBienestar(interestData);
+};
+
+// Caso B: Registro completo y Activación (Venta cerrada) - Bienestar Plus
+export const processClientRegistrationBienestar = async (clientData) => {
+  const { name, phone_number, email, document_id, timestamp } = clientData;
+  
+  console.log(`[REGISTRATION] Procesando registro Bienestar Plus: ${name}`);
+
+  // 1. Guardar en DB
+  const saveResult = await saveInterestedClientBienestar({ name, phone_number, email, document_id });
+  
+  if (!saveResult.success) {
+    return { success: false, error: 'Error guardando en BD (Bienestar)', details: saveResult.error };
+  }
+
+  // 2. Enviar correos de activación
+  const emailResults = await sendActivationEmailsBienestar({
+    name, phone_number, email, document_id, timestamp, wasExisting: saveResult.existed
+  });
+
+  return {
+    success: true,
+    data: { client: saveResult.data, existed: saveResult.existed, emailResults },
+    message: saveResult.existed ? 'Cliente Bienestar Plus reactivado' : 'Cliente Bienestar Plus registrado y activado'
+  };
+};
+
+// 3. Emails Bienestar Plus
+
+const sendInsuranceInterestNotificationBienestar = async (interestData) => {
+  const { clientName, clientPhone, interestLevel = 'alto', notes = '', contactPreference } = interestData;
+  // Usamos el mismo email de supervisor o uno específico si existiera
+  const supervisorEmail = process.env.SUPERVISOR_EMAIL_BIENESTARPLUS || process.env.SUPERVISOR_EMAIL_VIDADEUDOR;
+
+  const interestConfig = {
+    'alto': { emoji: '🔥', color: '#dc3545', label: 'ALTO INTERÉS' },
+    'medio': { emoji: '⚡', color: '#fd7e14', label: 'INTERÉS MEDIO' },
+    'bajo': { emoji: '💡', color: '#ffc107', label: 'INTERÉS INICIAL' }
+  };
+  const config = interestConfig[interestLevel] || interestConfig['alto'];
+
+  const htmlContent = `
+    <div style="font-family: Arial; border: 1px solid #ddd; padding: 20px; max-width: 600px;">
+      <h2 style="color: ${config.color}; text-align: center;">${config.emoji} ${config.label} - BIENESTAR PLUS</h2>
+      <p><strong>Cliente:</strong> ${clientName}</p>
+      <p><strong>Teléfono:</strong> ${clientPhone}</p>
+      <p><strong>Preferencia:</strong> ${contactPreference}</p>
+      <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
+        <strong>Notas:</strong> ${notes}
+      </div>
+    </div>
+  `;
+
+  try {
+    await sendMailHelper(supervisorEmail, `${config.emoji} INTERÉS BIENESTAR - ${clientName}`, htmlContent);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+const sendActivationEmailsBienestar = async (data) => {
+  const { name, email, wasExisting } = data;
+  const results = { supervisor: false, client: false };
+  const supervisorEmail = process.env.SUPERVISOR_EMAIL_BIENESTARPLUS || process.env.SUPERVISOR_EMAIL_VIDADEUDOR;
+
+  // 1. Email Supervisor
+  try {
+    const subjectSup = `${wasExisting ? '🔄 REACTIVACIÓN' : '🎉 NUEVA ACTIVACIÓN'} - Bienestar Plus - ${name}`;
+    const htmlSup = getSupervisorActivationTemplateBienestar(data);
+    await sendMailHelper(supervisorEmail, subjectSup, htmlSup);
+    results.supervisor = true;
+  } catch (e) { console.error('Error email supervisor (Bienestar):', e); }
+
+  // 2. Email Cliente (Bienvenida)
+  try {
+    const subjectClient = `🎉 ¡Bienvenido a Bienestar Plus!`;
+    const htmlClient = getClientWelcomeTemplateBienestar(data);
+    await sendMailHelper(email, subjectClient, htmlClient);
+    results.client = true;
+  } catch (e) { console.error('Error email cliente (Bienestar):', e); }
+
+  return results;
+};
+
+// Templates Bienestar Plus
+
+const getSupervisorActivationTemplateBienestar = ({ name, phone_number, email, document_id, wasExisting }) => `
+  <div style="font-family: Arial; padding: 20px; border: 1px solid #ddd;">
+    <h2 style="color: #28a745;">${wasExisting ? 'Cliente Reactivado (Bienestar Plus)' : 'Nuevo Cliente Activado (Bienestar Plus)'}</h2>
+    <ul>
+      <li><strong>Nombre:</strong> ${name}</li>
+      <li><strong>Teléfono:</strong> ${phone_number}</li>
+      <li><strong>Email:</strong> ${email}</li>
+      <li><strong>Cédula:</strong> ${document_id}</li>
+    </ul>
+  </div>
+`;
+
+const getClientWelcomeTemplateBienestar = ({ name }) => `
+  <div style="font-family: Arial; padding: 20px; border: 1px solid #ddd;">
+    <h2 style="color: #17a2b8;">¡Felicidades ${name}!</h2>
+    <p>Tu plan <strong>Bienestar Plus</strong> ha sido activado exitosamente.</p>
+    <div style="background: #e9ecef; padding: 15px; margin: 15px 0;">
+      <strong>Beneficios incluidos:</strong>
+      <ul>
+        <li>Cobertura ampliada de salud</li>
+        <li>Descuentos exclusivos en red aliada</li>
+        <li>Asistencia domiciliaria preferencial</li>
+        <li>Atención prioritaria 24/7</li>
+      </ul>
+    </div>
+    <p>Para solicitar servicios llama al <strong>(601) 4320020</strong> o contáctanos por WhatsApp.</p>
+  </div>
+`;

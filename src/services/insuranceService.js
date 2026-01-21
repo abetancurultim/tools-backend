@@ -113,16 +113,24 @@ const sendActivationEmails = async (data) => {
     const subjectSup = `${wasExisting ? '🔄 REACTIVACIÓN' : '🎉 NUEVA ACTIVACIÓN'} - Vida Deudor - ${name}`;
     const htmlSup = getSupervisorActivationTemplate(data);
     await sendMailHelper(process.env.SUPERVISOR_EMAIL_VIDADEUDOR, subjectSup, htmlSup);
+    console.log('[EMAILS] Supervisor notificado OK.');
     results.supervisor = true;
   } catch (e) { console.error('Error email supervisor:', e); }
 
   // 2. Email Cliente (Bienvenida)
-  try {
-    const subjectClient = `🎉 ¡Bienvenido a Asistencia Vida Deudor!`;
-    const htmlClient = getClientWelcomeTemplate(data);
-    await sendMailHelper(email, subjectClient, htmlClient);
-    results.client = true;
-  } catch (e) { console.error('Error email cliente:', e); }
+  // Verificamos que exista email y enviamos SIEMPRE el template de bienvenida
+  if (email) {
+    try {
+      console.log('[EMAILS] Intentando enviar bienvenida a cliente:', email);
+      const subjectClient = `🎉 ¡Bienvenido a Asistencia Vida Deudor!`;
+      const htmlClient = getClientWelcomeTemplate(data);
+      await sendMailHelper(email, subjectClient, htmlClient);
+      console.log('[EMAILS] Cliente notificado OK.');
+      results.client = true;
+    } catch (e) { console.error('Error email cliente:', e); }
+  } else {
+    console.warn('[EMAILS] No email para cliente, omitiendo bienvenida.');
+  }
 
   return results;
 };

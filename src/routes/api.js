@@ -8,7 +8,9 @@ import {
     handleGetCallLogs,
     handleGetConversationDetails,
     handleBienestarInterest,
-    handleBienestarRegistration
+    handleBienestarRegistration,
+    handleGetAdminfoDebts,
+    handleAdminfoTracking
 } from '../controllers/toolsController.js';
 import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
 
@@ -34,5 +36,11 @@ router.post('/bienestar-registration', protectRoute, handleBienestarRegistration
 
 // Tool 7: Obtener detalles de conversación de ElevenLabs (Dashboard)
 router.get('/elevenlabs/conversation/:conversation_id', protectRoute, handleGetConversationDetails);
+
+// Tool 8: Adminfo - Consultar Deudas
+router.post('/adminfo/get-debts', protectRoute, handleGetAdminfoDebts);
+
+// Tool 9: Adminfo - Registrar Seguimiento
+router.post('/adminfo/save-tracking', protectRoute, handleAdminfoTracking);
 
 export default router;

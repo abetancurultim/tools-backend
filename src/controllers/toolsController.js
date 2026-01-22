@@ -3,6 +3,7 @@ import * as reportingService from '../services/reportingService.js';
 import * as insuranceService from '../services/insuranceService.js';
 import * as callLogsService from '../services/callLogsService.js';
 import * as elevenLabsService from '../services/elevenLabsService.js';
+import * as adminfoService from '../services/adminfoService.js';
 
 // Tool 1: Consultar Deudas
 export const handleGetDebts = async (req, res) => {
@@ -275,4 +276,112 @@ export const handleBienestarInterest = async (req, res) => {
     // Pero si quisiéramos solo notificar sin guardar, llamaríamos a processInterestNotificationBienestar
     // Como en el original handleInsuranceInterest = handleInsuranceRegistration, seguiré ese patrón.
     return handleBienestarRegistration(req, res);
+};
+
+// New Adminfo Tools
+export const handleGetAdminfoDebts = async (req, res) => {
+  try {
+    let { tipoIdentificacion, identificacion } = req.body;
+    
+    // Default a Cédula (1) si no se especifica
+    if (!tipoIdentificacion) tipoIdentificacion = "1";
+
+    if (!identificacion) {
+      return res.status(400).json({ error: 'identificacion es requerido' });
+    }
+
+    const rawData = await adminfoService.consultaClientes(tipoIdentificacion, identificacion);
+
+    // --- Lógica de Parseo (Adaptado de consultAdminfoObligationsTool) ---
+    
+    // Validar si existe la propiedad 'obligaciones'
+    const obligationsRaw = rawData.obligaciones || [];
+    const infoBasica = rawData['informacion basica'] || {};
+    const datosContacto = rawData['datos contacto'] || {};
+    
+    const celularReplegal = infoBasica.celular_replegal || '';
+
+    const obligaciones = obligationsRaw.map(obs => ({
+        nrodoc: obs.nrodoc || 'N/A',
+        nombredoc: obs.nombredoc || 'Obligación',
+        saldo_vencido: Number(obs.saldo_vencido) || 0,
+        noctasvenc: Number(obs.noctasvenc) || 0,
+        nrocuotas: Number(obs.nrocuotas) || 0,
+        cuotas_pendientes: Number(obs.cuotas_pendientes) || 0,
+        fechvenci: obs.fechvenci || 'N/A',
+        descripcion: obs.descripcion || '',
+        diasMora: Number(obs.total_ges) || 0 // Mapeo solicitado
+    }));
+
+    const obligacionesVencidas = obligaciones.filter(obs => obs.saldo_vencido > 0);
+
+    // Obtener IDs necesarios para el seguimiento (idDatoContacto y numCredito)
+    const telefonos = datosContacto.telefonos || [];
+
+    // Buscar preferiblemente un celular para obtener el consrefer (que actúa como idDatoContacto)
+    const telefonoCelular = telefonos.find(t => t.tipo === 'CEL' || t.tiporeal === 'CEL');
+    const contactoSeleccionado = telefonoCelular || (telefonos.length > 0 ? telefonos[0] : null);
+    
+    const primerIdContacto = contactoSeleccionado ? (contactoSeleccionado.consrefer || '') : '';
+
+    // Obtener el número de crédito de la primera obligación si existe
+    const primerNumCredito = obligaciones.length > 0 ? (obligaciones[0].nrodoc || '') : '';
+
+    const result = {
+        cliente: infoBasica.nombres || rawData.razonsocial || 'Cliente',
+        celular_registrado: celularReplegal,
+        id_dato_contacto_obligatorio: primerIdContacto,
+        numero_credito_obligatorio: primerNumCredito,
+        total_obligaciones: obligaciones.length,
+        obligaciones_vencidas: obligacionesVencidas.length > 0 ? obligacionesVencidas : "El cliente se encuentra al día.",
+        detalle_obligaciones: obligaciones
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error in handleGetAdminfoDebts:', error?.response?.data || error.message);
+    res.status(500).json({ error: 'Error consultando deudas en Adminfo' });
+  }
+};
+
+export const handleAdminfoTracking = async (req, res) => {
+  try {
+    const input = req.body;
+    
+    // --- Lógica de Validación (Adaptado de registerAdminfoFollowUpTool) ---
+
+    // Mapear códigos de gestión textuales o inválidos a uno por defecto validado (70084)
+    let gestionCode = input.codigoGestion;
+    // Verifica si es numérico
+    if (!gestionCode || !/^\d+$/.test(gestionCode)) {
+        gestionCode = "70084"; 
+    }
+
+    // Forzar valores de canal y tipo de contacto aceptados por el API Legacy
+    const followUpData = {
+        ...input,
+        idDatoContacto: input.idDatoContacto || "0",
+        canalActual: "TEL",
+        tipoContacto: "ENT",
+        codigoGestion: gestionCode,
+        // Limpiar codigoCausal si el agente envía texto descriptivo no vacío o inválido
+        codigoCausal: (input.codigoCausal && !/^\d+$/.test(input.codigoCausal)) ? "" : (input.codigoCausal || "")
+    };
+
+    // Validar campos mínimos requeridos (después de aplicar defaults)
+    const required = ['identificacion', 'grabador', 'descripcion', 'numCredito']; // Reducidos ya que otros tienen defaults
+    const missing = required.filter(field => !followUpData[field]);
+
+    if (missing.length > 0) {
+      return res.status(400).json({ 
+        error: `Faltan campos requeridos para el seguimiento: ${missing.join(', ')}`
+      });
+    }
+
+    const result = await adminfoService.realizarSeguimiento(followUpData);
+    res.json({ message: 'Seguimiento registrado con éxito', result });
+  } catch (error) {
+    console.error('Error in handleAdminfoTracking:', error?.response?.data || error.message);
+    res.status(500).json({ error: 'Error registrando seguimiento en Adminfo' });
+  }
 };

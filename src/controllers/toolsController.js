@@ -350,6 +350,9 @@ export const handleAdminfoTracking = async (req, res) => {
     
     // --- Lógica de Validación (Adaptado de registerAdminfoFollowUpTool) ---
 
+    // Default a Cédula (1) si no se especifica
+    const tipoIdentificacion = input.tipoIdentificacion || "1";
+
     // Mapear códigos de gestión textuales o inválidos a uno por defecto validado (70084)
     let gestionCode = input.codigoGestion;
     // Verifica si es numérico
@@ -360,6 +363,7 @@ export const handleAdminfoTracking = async (req, res) => {
     // Forzar valores de canal y tipo de contacto aceptados por el API Legacy
     const followUpData = {
         ...input,
+        tipoIdentificacion,
         idDatoContacto: input.idDatoContacto || "0",
         canalActual: "TEL",
         tipoContacto: "ENT",

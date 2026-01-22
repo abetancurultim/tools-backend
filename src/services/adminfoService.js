@@ -106,13 +106,23 @@ export async function realizarSeguimiento(data) {
     const token = await getAdminfoAuthToken();
     const url = `${ADMINFO_URL}/v5/seguimientos`;
 
+    // Mapeo selectivo de campos comunes usados en las herramientas del agente
+    // para asegurar compatibilidad con los nombres esperados por el API Legacy de Adminfo (v5)
+    const normalizedData = {
+        ...data,
+        nrodoc: data.numCredito || data.nrodoc, // v5 suele usar nrodoc para el # de crédito
+        consrefer: data.idDatoContacto || data.consrefer // v5 usa consrefer para el ID de contacto
+    };
+
     // Asegurar que el tipo de identificación sea el código numérico y establecer defaults para opcionales
     const body = {
         codigoCausal: '',
         idCampana: '',
-        ...data, // Sobrescribe defaults si data trae valores
-        tipoIdentificacion: mapTipoIdentificacion(data.tipoIdentificacion)
+        ...normalizedData, // Sobrescribe defaults si data trae valores
+        tipoIdentificacion: mapTipoIdentificacion(normalizedData.tipoIdentificacion)
     };
+
+    console.log('Enviando seguimiento a Adminfo:', JSON.stringify(body, null, 2));
 
     try {
         const response = await axios.post(url, body, {

@@ -12,6 +12,10 @@ import {
     handleGetAdminfoDebts,
     handleAdminfoTracking
 } from '../controllers/toolsController.js';
+import { 
+    handleGetFlamingoDebts, 
+    handleFlamingoTracking 
+} from '../controllers/flamingoController.js';
 import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
 
 const router = Router();
@@ -42,5 +46,11 @@ router.post('/adminfo/get-debts', protectRoute, handleGetAdminfoDebts);
 
 // Tool 9: Adminfo - Registrar Seguimiento
 router.post('/adminfo/save-tracking', protectRoute, handleAdminfoTracking);
+
+// Tool 10: Flamingo - Consultar Deudas
+router.post('/flamingo/get-debts', protectRoute, handleGetFlamingoDebts);
+
+// Tool 11: Flamingo - Registrar Seguimiento
+router.post('/flamingo/save-tracking', protectRoute, handleFlamingoTracking);
 
 export default router;

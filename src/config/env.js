@@ -14,3 +14,7 @@ export const SUPABASE_KEY_COLTEFINANCIERA_RECORDATORIOS = process.env.SUPABASE_K
 export const ADMINFO_USER = process.env.ADMINFO_USER || 'api_coltefinanciera_pdn';
 export const ADMINFO_PASS = process.env.ADMINFO_PASS || '@cC3$04P1-c0lt3_10g2q0p0m5*';
 export const ADMINFO_URL = process.env.ADMINFO_URL || 'https://api.adminfo.net';
+
+// Flamingo Credentials
+export const FLAMINGO_USER = process.env.FLAMINGO_USER || 'flamingo_pdn';
+export const FLAMINGO_PASS = process.env.FLAMINGO_PASS || '49wGr$a9D2g@';

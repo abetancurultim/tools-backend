@@ -353,12 +353,17 @@ export const handleAdminfoTracking = async (req, res) => {
     // Default a Cédula (1) si no se especifica
     const tipoIdentificacion = input.tipoIdentificacion || "1";
 
-    // Mapear códigos de gestión textuales o inválidos a uno por defecto validado (70084)
-    let gestionCode = input.codigoGestion;
-    // Verifica si es numérico
+    // Validar y priorizar el código de gestión entrante
+    let gestionCode = input.codigoGestion || input.management_code;
+    
+    // Si no llega un código válido (numérico), usar el default 70084 (Gestión efectiva)
+    // Esto permite que ElevenLabs envíe códigos específicos como 70106, 70091, etc.
     if (!gestionCode || !/^\d+$/.test(gestionCode)) {
         gestionCode = "70084"; 
     }
+
+    // Priorizar descripción entrante
+    const descripcion = input.descripcion || input.description || "Gestión realizada por Agente IA";
 
     // Forzar valores de canal y tipo de contacto aceptados por el API Legacy
     const followUpData = {
@@ -368,6 +373,7 @@ export const handleAdminfoTracking = async (req, res) => {
         canalActual: "TEL",
         tipoContacto: "ENT",
         codigoGestion: gestionCode,
+        descripcion: descripcion,
         // Limpiar codigoCausal si el agente envía texto descriptivo no vacío o inválido
         codigoCausal: (input.codigoCausal && !/^\d+$/.test(input.codigoCausal)) ? "" : (input.codigoCausal || "")
     };

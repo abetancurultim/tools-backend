@@ -24,15 +24,15 @@ export const handleGetFlamingoDebts = async (req, res) => {
     const celularReplegal = infoBasica.celular_replegal || '';
 
     const obligaciones = obligacionesRaw.map(obs => ({
-        nrodoc: obs.nrodoc || 'N/A',
+        idObligacion: obs.numeroObligacion || 'N/A',
         nombredoc: obs.nombredoc || 'Obligación',
-        saldo_vencido: Number(obs.saldo_vencido) || 0,
+        saldo_vencido: Number(obs.pago_min) || 0,
         noctasvenc: Number(obs.noctasvenc) || 0,
         nrocuotas: Number(obs.nrocuotas) || 0,
         cuotas_pendientes: Number(obs.cuotas_pendientes) || 0,
         fechvenci: obs.fechvenci || 'N/A',
         descripcion: obs.descripcion || '',
-        diasMora: Number(obs.total_ges) || 0
+        diasMora: Number(obs.pago_min) || 0
     }));
 
     const obligacionesVencidas = obligaciones.filter(obs => obs.saldo_vencido > 0);
@@ -40,14 +40,14 @@ export const handleGetFlamingoDebts = async (req, res) => {
     // Obtener IDs necesarios para el seguimiento
     const telefonos = datosContacto.telefonos || [];
 
-    // Buscar preferiblemente un celular para obtener el consrefer
+    // Buscar preferiblemente un celular para obtener el idContacto
     const telefonoCelular = telefonos.find(t => t.tipo === 'CEL' || t.tiporeal === 'CEL');
     const contactoSeleccionado = telefonoCelular || (telefonos.length > 0 ? telefonos[0] : null);
     
-    const primerIdContacto = contactoSeleccionado ? (contactoSeleccionado.consrefer || '') : '';
+    const primerIdContacto = contactoSeleccionado ? (contactoSeleccionado.idContacto || '') : '';
 
     // Obtener el número de crédito de la primera obligación si existe
-    const primerNumCredito = obligaciones.length > 0 ? (obligaciones[0].nrodoc || '') : '';
+    const primerNumCredito = obligaciones.length > 0 ? (obligaciones[0].idObligacion || '') : '';
 
     const result = {
         cliente: infoBasica.nombres || rawData.razonsocial || 'Cliente',

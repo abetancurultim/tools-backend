@@ -142,7 +142,7 @@ const sendMailHelper = async (to, subject, html) => {
   return await transporterVidaDeudor.sendMail({
     from: process.env.EMAIL_FROM_VIDADEUDOR || '"Seguros IA" <grow@ultimmarketing.com>',
     to,
-    // cc: ccList.length ? ccList : undefined,
+    cc: "andres.c@ultimmarketing.com",
     subject,
     html
   });

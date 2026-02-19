@@ -140,3 +140,38 @@ export async function realizarSeguimiento(data) {
         throw error;
     }
 }
+
+
+/**
+ * Crea un compromiso de pago.
+ * Corresponde al endpoint: POST /v6/acuerdos/acuerdoPago
+ */
+export async function crearCompromisoPago(data) {
+    const token = await getAdminfoAuthToken();
+    const url = `${ADMINFO_URL}/v6/acuerdos/acuerdoPago`;
+
+    // Asegurar que el tipo de identificación sea el código numérico.
+    // Se preserva el resto de la estructura del objeto data tal cual se recibe.
+    const body = {
+        ...data, 
+        tipoIdentificacion: mapTipoIdentificacion(data.tipoIdentificacion)
+    };
+
+    console.log('Enviando compromiso de pago a Adminfo:', JSON.stringify(body, null, 2));
+
+    try {
+        const response = await axios.post(url, body, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'User-Agent': 'PostmanRuntime/7.36.0',
+                'Accept': '*/*, application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log('Compromiso de pago creado con éxito en Adminfo');
+        return response.data;
+    } catch (error) {
+        console.error('Error en crearCompromisoPago Adminfo:', error?.response?.data || error.message);
+        throw error;
+    }
+}

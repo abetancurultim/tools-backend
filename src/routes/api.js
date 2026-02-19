@@ -10,7 +10,8 @@ import {
     handleBienestarInterest,
     handleBienestarRegistration,
     handleGetAdminfoDebts,
-    handleAdminfoTracking
+    handleAdminfoTracking,
+    handleAdminfoPaymentAgreement
 } from '../controllers/toolsController.js';
 import { 
     handleGetFlamingoDebts, 
@@ -41,10 +42,10 @@ router.post('/bienestar-registration', protectRoute, handleBienestarRegistration
 // Tool 7: Obtener detalles de conversación de ElevenLabs (Dashboard)
 router.get('/elevenlabs/conversation/:conversation_id', protectRoute, handleGetConversationDetails);
 
-// Tool 8: Adminfo - Consultar Deudas
+// Tool 8: Adminfo - Consultar Deudas - Coltefinanciera
 router.post('/adminfo/get-debts', protectRoute, handleGetAdminfoDebts);
 
-// Tool 9: Adminfo - Registrar Seguimiento
+// Tool 9: Adminfo - Registrar Seguimiento - Coltefinanciera
 router.post('/adminfo/save-tracking', protectRoute, handleAdminfoTracking);
 
 // Tool 10: Flamingo - Consultar Deudas
@@ -52,5 +53,8 @@ router.post('/flamingo/get-debts', protectRoute, handleGetFlamingoDebts);
 
 // Tool 11: Flamingo - Registrar Seguimiento
 router.post('/flamingo/save-tracking', protectRoute, handleFlamingoTracking);
+
+// Tool 12: Adminfo - Crear Compromiso de Pago - OJO - Coltefinanciera
+router.post('/adminfo/payment-agreement', protectRoute, handleAdminfoPaymentAgreement);
 
 export default router;

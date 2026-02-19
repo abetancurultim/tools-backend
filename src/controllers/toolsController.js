@@ -395,3 +395,32 @@ export const handleAdminfoTracking = async (req, res) => {
     res.status(500).json({ error: 'Error registrando seguimiento en Adminfo' });
   }
 };
+
+// Tool 12: Adminfo - Crear Compromiso de Pago - Coltefinanciera
+export const handleAdminfoPaymentAgreement = async (req, res) => {
+  try {
+    const input = req.body;
+
+    // Validar campos mínimos requeridos
+    const required = ['tipoIdentificacion', 'identificacion', 'idObligacion', 'grabador', 'fechaPago', 'valorTotalPactado', 'cuotas', 'codigoGestion', 'acuerdo_pago'];
+    const missing = required.filter(field => !input[field]);
+
+    if (missing.length > 0) {
+      return res.status(400).json({
+        error: `Faltan campos requeridos para el compromiso de pago: ${missing.join(', ')}`
+      });
+    }
+
+    if (!Array.isArray(input.acuerdo_pago) || input.acuerdo_pago.length === 0) {
+      return res.status(400).json({
+        error: 'El campo acuerdo_pago debe ser un arreglo con al menos una cuota'
+      });
+    }
+
+    const result = await adminfoService.crearCompromisoPago(input);
+    res.json({ message: 'Compromiso de pago creado con éxito', result });
+  } catch (error) {
+    console.error('Error in handleAdminfoPaymentAgreement:', error?.response?.data || error.message);
+    res.status(500).json({ error: 'Error creando compromiso de pago en Adminfo' });
+  }
+};

@@ -140,3 +140,40 @@ export async function realizarSeguimientoFlamingo(data) {
         throw error;
     }
 }
+
+/**
+ * Crea un compromiso de pago usando credenciales Flamingo.
+ * Corresponde al endpoint: POST /v6/acuerdos/acuerdoPago
+ */
+export async function crearCompromisoPagoFlamingo(data) {
+    const token = await getFlamingoAuthToken();
+    const url = `${ADMINFO_URL}/v6/acuerdos/acuerdoPago`;
+
+    // Normalizar idDatoContacto (igual que en seguimiento, donde se mapea como consrefer)
+    const body = {
+        codigoCausal: '',
+        codAbogado: '',
+        canalGestion: '',
+        ...data,
+        tipoIdentificacion: mapTipoIdentificacion(data.tipoIdentificacion),
+        idDatoContacto: data.idDatoContacto || data.consrefer || '0'
+    };
+
+    console.log('Enviando compromiso de pago a Adminfo (Flamingo):', JSON.stringify(body, null, 2));
+
+    try {
+        const response = await axios.post(url, body, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'User-Agent': 'PostmanRuntime/7.36.0',
+                'Accept': '*/*, application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log('Compromiso de pago creado con éxito en Adminfo (Flamingo)');
+        return response.data;
+    } catch (error) {
+        console.error('Error en crearCompromisoPagoFlamingo:', error?.response?.data || error.message);
+        throw error;
+    }
+}

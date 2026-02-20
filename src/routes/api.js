@@ -15,7 +15,8 @@ import {
 } from '../controllers/toolsController.js';
 import { 
     handleGetFlamingoDebts, 
-    handleFlamingoTracking 
+    handleFlamingoTracking,
+    handleFlamingoPaymentAgreement
 } from '../controllers/flamingoController.js';
 import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
 
@@ -56,5 +57,8 @@ router.post('/flamingo/save-tracking', protectRoute, handleFlamingoTracking);
 
 // Tool 12: Adminfo - Crear Compromiso de Pago - OJO - Coltefinanciera
 router.post('/adminfo/payment-agreement', protectRoute, handleAdminfoPaymentAgreement);
+
+// Tool 13: Flamingo - Crear Compromiso de Pago
+router.post('/flamingo/payment-agreement', protectRoute, handleFlamingoPaymentAgreement);
 
 export default router;

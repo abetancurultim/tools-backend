@@ -117,3 +117,45 @@ export const handleFlamingoTracking = async (req, res) => {
     res.status(500).json({ error: 'Error registrando seguimiento en Adminfo (Flamingo)' });
   }
 };
+
+// Tool 13: Flamingo - Crear Compromiso de Pago
+export const handleFlamingoPaymentAgreement = async (req, res) => {
+  try {
+    const input = req.body;
+
+    // Default a Cédula (1) si no se especifica
+    const tipoIdentificacion = input.tipoIdentificacion || "1";
+
+    // Validar campos mínimos requeridos
+    const required = ['identificacion', 'idObligacion', 'grabador', 'fechaPago', 'valorTotalPactado', 'cuotas', 'codigoGestion', 'acuerdo_pago'];
+    const missing = required.filter(field => !input[field]);
+
+    if (missing.length > 0) {
+      return res.status(400).json({
+        error: `Faltan campos requeridos para el compromiso de pago Flamingo: ${missing.join(', ')}`
+      });
+    }
+
+    if (!Array.isArray(input.acuerdo_pago) || input.acuerdo_pago.length === 0) {
+      return res.status(400).json({
+        error: 'El campo acuerdo_pago debe ser un arreglo con al menos una cuota'
+      });
+    }
+
+    // Construir datos finales con defaults aplicados
+    const paymentData = {
+      ...input,
+      tipoIdentificacion,
+      idDatoContacto: input.idDatoContacto || "0",
+      tipoContacto: input.tipoContacto || "ENT",
+      canalActual: input.canalActual || "TEL",
+      codigoCausal: (input.codigoCausal && !/^\d+$/.test(input.codigoCausal)) ? "" : (input.codigoCausal || ""),
+    };
+
+    const result = await flamingoService.crearCompromisoPagoFlamingo(paymentData);
+    res.json({ message: 'Compromiso de pago creado con éxito en Flamingo', result });
+  } catch (error) {
+    console.error('Error in handleFlamingoPaymentAgreement:', error?.response?.data || error.message);
+    res.status(500).json({ error: 'Error creando compromiso de pago en Adminfo (Flamingo)' });
+  }
+};

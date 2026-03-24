@@ -21,15 +21,18 @@ class AndesService {
                         return reject(new Error('No se pudo inicializar el cliente SOAP para Andes'));
                     }
 
-                    // Configurar WS-Security estricto con strong-soap
+                    // Configurar WS-Security
                     const WSSecurity = soap.WSSecurity;
-                    // El 3er parámetro define opciones como setNonce, PasswordText
+                    console.log(`[AndesService] Inicializando WSSecurity para usuario: ${ANDES_USER}`);
+                    
                     const options = {
                         hasTimeStamp: false,
                         hasTokenCreated: false,
-                        hasNonce: false
+                        hasNonce: false,
+                        passwordType: 'PasswordText'
                     };
                     
+                    // Volvemos a ANDES_PASSWORD según tu instrucción
                     const wsSecurity = new WSSecurity(ANDES_USER, ANDES_PASSWORD, options);
                     
                     client.setSecurity(wsSecurity);
@@ -55,8 +58,7 @@ class AndesService {
             const client = await this.initClient();
             
             return new Promise((resolve, reject) => {
-                // Al parecer Andes espera un string directo en vez de un objeto para 'Login'
-                // O el WSDL tiene un formato muy especifico. Primero intentamos el objeto
+                // Restauramos el wrapper LoginRequest que sí era reconocido como procedimiento
                 client.Login({ LoginRequest: { identificador: 'PruebaConexion' } }, (err, result, envelope, soapHeader) => {
                     if (err) {
                         console.error('[AndesService-LoginErro]', err.body || err);
@@ -124,7 +126,7 @@ class AndesService {
                 FirmaVisible: datosFirmante.firmaVisible || '1', // 1 para SI, 2 para NO
                 Coordenadas: datosFirmante.coordenadasFirma || '80,20,150,60', // x, y, w, h
                 ImagenFirma: datosFirmante.imagenFirma || '',
-                NumeroPagina: datosFirmante.pagina || 0, // 0 = ultima hoja
+                Pagina: datosFirmante.pagina || 0, // 0 = ultima hoja
                 Observaciones: datosFirmante.observaciones || 'Firma de prueba',
                 TipoFirmaVis: typeof datosFirmante.tipoFirmaVis === 'number' ? datosFirmante.tipoFirmaVis : 1
             };

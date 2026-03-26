@@ -1,0 +1,364 @@
+ESPECIFICACIÓN
+TÉCNICADEWEBSERVICE
+FIRMAELECTRÓNICA
+AndesSCDS.A.
+2023
+----------------Page (0) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+1.  Objetivo
+Describir los aspectos técnicos del servicio de firma electrónica.
+2.  Descripción general del servicio
+El WebService de firma electrónica es un servicio que permite recibir la información
+necesaria y suficiente para la emisión de un certificado de firma electrónica y firma
+de documentos.
+Los componentes requeridos para la interacción se describen a continuación:
+✓           Un cliente de WS desarrollado por la entidad autorizada siguiendo las
+especificaciones de este documento.
+✓           Un par de credenciales de autenticación válidas para poder acceder a los
+servicios.
+✓           La clave o contraseña debe ser generada a través de la plataforma de
+administración de usuarios.
+✓           El tipo de contraseña debe ser PasswordText.
+3.  Requerimientos de canal seguro de comunicación
+La comunicación entre el cliente de WS y el WebService debe realizarse mediante
+un canal seguro SSL/TLS. (Versiones soportadas - TLS 1.2 y TLS 1.3).
+El protocolo de comunicaciones utilizado para aplicar seguridad sobre el servicio es
+WS-Security versión 1.1.
+4.  Mecanismos de autenticación
+✓           El cliente de WS agrega una cabecera WS-Security con usuario y clave.
+✓           El WebService autentica al usuario.
+✓           El cliente del WS recibe la respuesta del WebService.
+----------------Page (1) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+5.  Descripción de métodos del webservice
+La siguiente URL direcciona al WSDL de pruebas en el ambiente de calidad:
+Ejemplo:
+https://firmaelectronicapruebas/Dominio/WS/FE/wsdl.php?WSDL
+Nota: El EndPoint de Consumo será suministrado junto con las credenciales
+solicitadas.
+✓                                        Login
+Método del Servicio Web que recibe la solicitud de consumo básica con las
+cabeceras de autenticación para verificar el estado del servicio y las
+credenciales.
+Datos de Entrada
+Dato                                                                                                                              Ti             po                                                                                                                                                                                                                      Descri                                                           pción                                                                                                                                                                                                                                     Obli                                       gatorio
+Identificador   String
+Cadena de texto que se utiliza para
+probar el estado del servicio.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             NO
+Datos de Salida
+estado       Int
+Si el proceso es exitoso se retorna 0, de lo
+contrario se indica el código del error.         SI
+mensaje     String
+¡Si el proceso es exitoso se retorna el
+mensaje OK!, de lo contrario se indica la
+descripción    del    error.    Ejemplo:
+“Contraseña y/o usuario
+inválidos.”
+SI
+----------------Page (2) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+✓                                        Solicitud Certificado
+Método del Servicio Web que permite obtener un certificado de firma
+electrónica para firmar documentos.
+Datos de Entrada
+Dato                                                                                                                                            Ti             p             o                                                                                                                                                                        Descri                                                           p             ción                                                                                                                                                                                                      Obli                                       g             atorio
+IdTipoDocumento   Int   Identificador    del    tipo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              de
+documento.
+Códi                                              g             o                                                                             Descri                                                           p             ción
+1            C.C
+2            NIT
+3            PAS
+6            C.E
+8           NUIP
+12           PEP
+13            PT
+SI
+Documento    Strin                                                                                                                                                                                                              g                                 Cadena de texto del documento         SI
+PrimerNombre   Strin                                                                                                                                                                                                                       g                                 Primer Nombre                                                                                                                                                                                                                                                                                                                                                                                                                                                                   SI
+Se                       g             undoNombre  Strin                                                                                                                                                                                                g                                 Se                       g             undo Nombre                                                                                                                                                                                                                                                                                                                                                                                                                   NO
+PrimerA                                                                          p              ellido   Strin                                                                                                                                g                                 Primer A                                                                                p              ellido                                                                                                                                                                                                                                                                                                                                                                      SI
+Se                       g             undoA                                                                  p              ellido  Strin                                                                                                                 g                                 Se                       g             undo A                                                                        p              ellido                                                                                                                                                                                                                                                                                                                              NO
+Correo      Strin                                                                                                                                                                                       g                                 Correo electrónico
+Celular        Int   Celular
+Datos de Salida
+estado        Int   Si el proceso es exitoso se retorna 0,
+de lo contrario se retorna el código
+de error.
+SI
+mensaje      String  Si el proceso es exitoso se retorna el
+mensaje: “Se realizo el registro de la
+solicitud   de   certificado   para
+1095804135”,  de  lo  contrario  se
+indica  la  descri                                                                                                                                                                                    p              ción  del  error.
+SI
+----------------Page (3) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+Ejemplo: “Contraseña y/o usuarios
+inválidos.”
+✓                                        Firma Documento
+Método del Servicio Web que permite firmar documentos.
+Datos de entrada
+Dato                                                                                                                                                   Tipo                                                                                                                                                                                              Descripción                                                                                                                                                                                                                                                                   Obli                                       g             atorio
+IdTipoDocumento   Int   Identificador    del    tipo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           de
+documento.
+Códi                                              g             o                                                                                    Descri                                                           p             ción
+1            C.C
+2             NIT
+3            PAS
+6             C.E
+8            NUIP
+12            PEP
+13             PT
+SI
+Documento     Strin                                                                                                                                                                                                                    g                                   Cadena de texto del documento        SI
+CodigoOTP      Int   Código  enviado  al  correo  del
+usuario  firmante  (válido  por  5
+minutos                                                                          )
+SI
+Adjunto       String  Base64 con los documentos a firmar
+en                               p              df.
+SI
+NombreAdjunto   String  Nombre del documento afirmar sin
+extensión.
+SI
+FirmaVisible     String  Identificador que indica si aplica o
+no firma visible.
+Códi                                              g             o                                                                                       Descri                                                           p             ción
+1              SI
+2             NO
+SI
+----------------Page (4) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+Coordenadas    String  Cadena de texto que indica las
+posiciones  de  firma,  se  deben
+enviar  en  el  siguiente  orden,
+separado por comas:
+posición en x, posición en y, ancho,
+alto.
+Ejemplo:
+x                                                                                      y                                                                                    w                                                                                        h
+80     20     150     60
+NO
+ImagenFirma    String  Base64 de la imagen de firma, en
+formato (png, jpg).
+NO
+Pagina        Int   Número de la página que desea
+firmar, si no es una página valida o
+no se envía, se firma la última hoja.
+Aplica solo para firma electrónica.
+NO
+Observaciones   String  Campo para enviar observaciones
+que se imprimirán en el testigo.
+NO
+Datos de salida
+estado        Int   Si el proceso es exitoso se retorna 0,
+de lo contrario se indica el código
+del error.
+SI
+mensaje      String  Si el proceso es exitoso retorna la
+base 64 del documento firmado, de
+lo contrario se indica la descripción
+del error.
+SI
+id           Int   Identificador único de la solicitud
+de firma.
+SI
+✓                                        Descargar Certificado
+Método del Servicio Web que permite obtener la base 64 del testigo de firma.
+----------------Page (5) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+Datos de entrada
+Dato                                                                                                                                          Tipo                                                                                                                                                                                                    Descripción                                                                                                                                                                                                                                                                           Obligatorio
+IdSolicitudFirma    Int   Identificador único de la solicitud
+retornado    en    el    método
+FirmaDocumento
+SI
+Datos de salida
+estado        Int   Si el proceso es exitoso se retorna 0,
+de lo contrario se indica el código
+del error.
+SI
+mensaje      String  Si el proceso es exitoso se retorna
+base 64 del testigo de firma, de lo
+contrario se indica la descripción del
+error.
+SI
+✓                                        Consulta Solicitud
+Método del Servicio Web que permite registrar los documentos que se utilizan
+para firmar desde el método de SolicitudFirmadoFlujo.
+Datos de entrada
+Dato                                                                                                                                Ti             p             o                                                                                                                                                                                             Descri                                                           p             ción                                                                                                                                                                                                                   Obli                                       g             atorio
+IdSolicitudFirma   Int   Identificador  único  de  la  solicitud
+retornado     en     el     método
+FirmaDocumento.
+SI
+Datos de salida
+estado       Int   Si el proceso es exitoso se retorna 0, de lo
+contrario se indica el códi                                                                                                                                                                                                                                                            g             o del error.
+SI
+mensaje     String  Si el proceso es se retorna un Json con los
+datos del firmante, fecha de firma, Dn
+del certificado y la base 64 del testigo,
+de lo contrario se indica la descripción
+del error.
+SI
+----------------Page (6) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+✓                                        Lista de códigos de error
+Códi                                              g             o                                                                                                                                                                                                                                                                                                                                                       Descri                                                           p             ción
+115     No se suministró el documento.
+115     No se suministró el códi                                                                                                                                                                                                                                                                                                                                g             o OTP.
+119     No se suministró el primer nombre del firmante de documento $value-
+>Documento
+124     No se suministró el primer apellido del firmante de documento $value-
+>Documento
+128     El correo electrónico del firmante de documento $value->Documento
+no tiene una estructura valida
+129     No se suministró el correo electrónico del firmante de documento
+$           value->Documento
+130     Error: el Celular del firmante de documento $value->Documento debe
+ser numérico
+131     No se suministró el celular del firmante de documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        $value-
+>Documento
+142     No se suministró el base64 del adjunto para realizar el proceso de firma
+500                                                                                               ¡      Error! Contraseña                                                                                                                                                                             y           /o Usuario Inválidos
+501     No fue                                                                                                                                                                      p              osible establecer conexión con la base de datos.
+6.  Control de Cambios
+Versión                                                                                                                    Fecha                                                                                                                                                                                                                                                                                          Detalle                                                                                                                                                                                                                                                                                                         Res                                 p             onsable
+1     23/05/2023       versión inicial del documento.
+Director de
+operaciones/
+Profesional de
+Pro                               y           ectos
+----------------Page (7) Break----------------
+ESPECIFICACIÓN TÉCNICA DE
+WEBSERVICE FIRMA
+ELECTRÓNICA
+Fecha de vigencia:       23/05/2023
+Versión:                                                                                                                                                                               1
+Clasificación de la
+información:
+Confidencial
+Elaboró:
+Profesional de
+Pro                   y       ectos
+Revisó:
+Director de
+O           p         eraciones
+Aprobó:
+Director de
+O           p         eraciones
+----------------Page (8) Break----------------

@@ -1,0 +1,27 @@
+PS C:\Users\alejo\Desktop\Desarrollo\backend\tools-backend> npm run dev
+
+> tools-backend@1.0.0 dev
+> nodemon src/index.js
+
+[dotenv@17.2.3] injecting env (42) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Server running on port 3002
+[AndesService] Inicializando WSSecurity para usuario: caren.mejia
+[AndesService] SOAP Client inicializado para ambiente de pruebas.
+[SOAP-DEBUG] Request XML Enviado:
+ <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Header>
+    <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+      <wsse:UsernameToken wsu:Id="SecurityToken-2026-03-24T15:16:19Z">
+        <wsse:Username>caren.mejia</wsse:Username>
+        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">***</wsse:Password>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </soap:Header>
+  <soap:Body>
+    <ns1:LoginRequest xmlns:ns1="https://test-circuitodefirmado.andesscd.com.co">
+      <ns1:identificador>PruebaConexion</ns1:identificador>
+    </ns1:LoginRequest>
+  </soap:Body>
+</soap:Envelope>

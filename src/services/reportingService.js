@@ -1,4 +1,5 @@
 import { s3, transporterColectora } from '../config/clients.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 // --- S3 Logic ---
 export const uploadCallDataToS3 = async (callData) => {
@@ -24,8 +25,10 @@ export const uploadCallDataToS3 = async (callData) => {
   };
 
   try {
-    const result = await s3.upload(params).promise();
-    return { success: true, fileName, location: result.Location };
+    await s3.send(new PutObjectCommand(params));
+    const region = process.env.AWS_REGION_COLECTORA || 'us-east-1';
+    const location = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
+    return { success: true, fileName, location };
   } catch (error) {
     console.error('[AWS-S3] Error:', error);
     return { success: false, error: error.message };

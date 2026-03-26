@@ -18,6 +18,14 @@ import {
     handleFlamingoTracking,
     handleFlamingoPaymentAgreement
 } from '../controllers/flamingoController.js';
+
+import {
+    verificarEstado,
+    solicitarFirma,
+    confirmarFirma,
+    consultarTestigo
+} from '../controllers/andesController.js';
+
 import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
 
 const router = Router();
@@ -60,5 +68,11 @@ router.post('/adminfo/payment-agreement', protectRoute, handleAdminfoPaymentAgre
 
 // Tool 13: Flamingo - Crear Compromiso de Pago
 router.post('/flamingo/payment-agreement', protectRoute, handleFlamingoPaymentAgreement);
+
+// Andes SCD - Firma Electrónica OTP
+router.post('/andes/test-connection', protectRoute, verificarEstado);
+router.post('/andes/solicitar-firma', protectRoute, solicitarFirma);
+router.post('/andes/confirmar-firma-otp', protectRoute, confirmarFirma);
+router.get('/andes/testigo/:idSolicitud', protectRoute, consultarTestigo);
 
 export default router;

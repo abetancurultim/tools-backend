@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import AWS from 'aws-sdk';
+import { S3Client } from '@aws-sdk/client-s3';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -21,12 +21,13 @@ const supabaseKeyColtefinancieraRecordatorios = process.env.SUPABASE_KEY_COLTEFI
 export const supabaseColtefinancieraRecordatorios = createClient(supabaseUrlColtefinancieraRecordatorios, supabaseKeyColtefinancieraRecordatorios);
 
 // --- AWS S3 ---
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID_COLECTORA,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_COLECTORA,
+export const s3 = new S3Client({
   region: process.env.AWS_REGION_COLECTORA || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID_COLECTORA,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_COLECTORA,
+  },
 });
-export const s3 = new AWS.S3();
 
 // --- Nodemailer (SendGrid) ---
 export const transporterColectora = nodemailer.createTransport({

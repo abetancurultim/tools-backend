@@ -1,5 +1,5 @@
 import soap from 'strong-soap';
-import { ANDES_WSDL_TEST, ANDES_USER, ANDES_PASSWORD } from '../config/env.js';
+import { ANDES_WSDL_TEST, ANDES_USER, ANDES_PASSWORD_SHA1 } from '../config/env.js';
 
 const maskSoapPassword = (xml = '') => {
     return xml.replace(/(<wsse:Password[^>]*>)([\s\S]*?)(<\/wsse:Password>)/g, '$1***$3');
@@ -32,8 +32,7 @@ class AndesService {
                         passwordType: 'PasswordText'
                     };
                     
-                    // Volvemos a ANDES_PASSWORD según tu instrucción
-                    const wsSecurity = new WSSecurity(ANDES_USER, ANDES_PASSWORD, options);
+                    const wsSecurity = new WSSecurity(ANDES_USER, ANDES_PASSWORD_SHA1, options);
                     
                     client.setSecurity(wsSecurity);
 

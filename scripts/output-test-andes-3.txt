@@ -1,0 +1,65 @@
+PS C:\Users\alejo\Desktop\Desarrollo\backend\tools-backend> node scripts/test-andes-diagnose.mjs
+[dotenv@17.2.3] injecting env (42) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+══════════════════════════════════════════
+  DIAGNÓSTICO ANDES SCD - WS Firma OTP
+══════════════════════════════════════════
+
+[1] Variables de entorno:
+  ANDES_WSDL_TEST   : https://test-circuitodefirmado.andesscd.com.co/WS/FE/wsdl.php?wsdl
+  ANDES_USER        : "caren.mejia" ✓
+  ANDES_PASSWORD    : [10 chars] ✓
+  ANDES_PASSWORD_SHA1: [124 chars] ✓
+
+[2] SHA1(ANDES_PASSWORD) calculado localmente (base64): FsYZvzKYf0DbCxTtnQV92OGIu9c=
+  ¿Coincide con ANDES_PASSWORD_SHA1? ❌ NO — valores distintos
+  Decodificando ANDES_PASSWORD_SHA1 como base64 → "kQDARkSgxWkZL26/iYaxAKr1g05niC..."
+  ¿SHA1 local == decode(ANDES_PASSWORD_SHA1)? ❌ NO
+
+[3] Prueba A — passwordType: PasswordText (configuración actual)
+  SOAP client creado ✓
+  Llamando Login...
+  [A] Password en XML: [10 chars, no vacío] ✓
+  [A] Password Type: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText
+  Respuesta: estado=601, mensaje="La contraseña de la entidad es obligatoria"
+
+[4] Prueba B — passwordType: PasswordDigest (SHA1 calculado localmente)
+  SOAP client creado ✓
+  Llamando Login...
+  [B] Password en XML: [28 chars, no vacío] ✓
+  [B] Password Type: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest
+  Respuesta: estado=601, mensaje="La contraseña de la entidad es obligatoria"
+
+[5] Prueba D — SHA-512(ANDES_PASSWORD) calculado localmente, como PasswordText
+  SHA512 base64        : SpQqipG+KJDFUlCZBpW0+M9GVnkjlES8YPtrONg4mj57B1ZVIp2FAp3L6FW/vbTalQGFf12LQQ4IZFDLWs8vMw==
+  SHA512 doble-base64  : U3BRcWlwRytLSkRGVWxDWkJwVzArTTlHVm5ramxFUzhZUHRyT05nNG1qNTdCMVpWSXAyRkFwM0w2RlcvdmJUYWxRR0ZmMTJMUVE0SVpGRExXczh2TXc9PQ==
+  [D1-sha512] Password en XML: [88 chars, no vacío] ✓
+  [D1-sha512] Password Type: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText
+  [D1-sha512] Respuesta: estado=601, mensaje="La contraseña de la entidad es obligatoria"
+  [D2-sha512-doble-b64] Password en XML: [120 chars, no vacío] ✓
+  [D2-sha512-doble-b64] Password Type: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText
+  [D2-sha512-doble-b64] Respuesta: estado=601, mensaje="La contraseña de la entidad es obligatoria"
+
+[6] Prueba C — usando ANDES_PASSWORD_SHA1 directamente como password
+  SOAP client creado ✓
+  Llamando Login...
+  [C] Password en XML: [124 chars, no vacío] ✓
+  [C] Password Type: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText
+  Respuesta: estado=0, mensaje="OK!"
+  ✓ CONEXIÓN OK con ANDES_PASSWORD_SHA1
+
+[7] Métodos disponibles en el WSDL (para confirmar que Login, SolicitudCertificado, etc. existen):
+  Servicio: FirmaElectronica / Puerto: LoginPort
+  Métodos: Login
+  Servicio: FirmaElectronica / Puerto: SolicitudCertificadoPort
+  Métodos: SolicitudCertificado
+  Servicio: FirmaElectronica / Puerto: FirmaDocumentoPort
+  Métodos: FirmaDocumento
+  Servicio: FirmaElectronica / Puerto: DescargarCertificadoPort
+  Métodos: DescargarCertificado
+  Servicio: FirmaElectronica / Puerto: ConsultaSolicitudPort
+  Métodos: ConsultaSolicitud
+
+══════════════════════════════════════════
+  FIN DEL DIAGNÓSTICO
+══════════════════════════════════════════

@@ -127,7 +127,10 @@ class AndesService {
 
       return new Promise((resolve, reject) => {
         client.SolicitudCertificado(args, (err, result) => {
-          if (err) return reject(err);
+          if (err) {
+            this.client = null;
+            return reject(err);
+          }
           resolve({
             estado: result.estado,
             mensaje: result.mensaje,
@@ -135,6 +138,7 @@ class AndesService {
         });
       });
     } catch (error) {
+      this.client = null;
       console.error(
         "[AndesService] Error en solicitarCertificado:",
         error.message,
@@ -171,11 +175,16 @@ class AndesService {
 
       return new Promise((resolve, reject) => {
         client.FirmaDocumento(args, (err, result) => {
-          if (err) return reject(err);
-          if (!result)
+          if (err) {
+            this.client = null;
+            return reject(err);
+          }
+          if (!result) {
+            this.client = null;
             return reject(
               new Error("Andes devolvió respuesta vacía (result undefined)"),
             );
+          }
           resolve({
             estado: result.estado,
             mensaje: result.mensaje,
@@ -184,6 +193,7 @@ class AndesService {
         });
       });
     } catch (error) {
+      this.client = null;
       console.error("[AndesService] Error en firmarDocumento:", error.message);
       throw error;
     }
@@ -201,7 +211,10 @@ class AndesService {
             },
           },
           (err, result) => {
-            if (err) return reject(err);
+            if (err) {
+              this.client = null;
+              return reject(err);
+            }
             resolve({
               estado: result.estado,
               mensaje: result.mensaje,
@@ -210,6 +223,7 @@ class AndesService {
         );
       });
     } catch (error) {
+      this.client = null;
       console.error(
         "[AndesService] Error en descargarCertificado:",
         error.message,

@@ -23,6 +23,10 @@ const mockAxios = {
 };
 
 // 2. Mockear módulos (ESM requiere unstable_mockModule)
+jest.unstable_mockModule('strong-soap', () => ({
+  default: { soap: { createClientAsync: jest.fn() } },
+  soap: { createClientAsync: jest.fn() }
+}));
 jest.unstable_mockModule('axios', () => ({ default: mockAxios }));
 jest.unstable_mockModule('../src/services/userService.js', () => ({
   fetchUser: jest.fn().mockResolvedValue({ document_id: '830120063', name: 'JUAN PEREZ', email: 'juan@example.com' })
@@ -30,11 +34,21 @@ jest.unstable_mockModule('../src/services/userService.js', () => ({
 jest.unstable_mockModule('../src/services/authService.js', () => ({
   getAuthToken: jest.fn().mockResolvedValue('fake-jwt-token')
 }));
+jest.unstable_mockModule('../src/services/flamingoService.js', () => ({
+  consultaClientesFlamingo: jest.fn()
+}));
+jest.unstable_mockModule('../src/middlewares/auth.js', () => ({
+  protectRoute: jest.fn((req, res, next) => next()),
+  verifyElevenLabsSignature: jest.fn((req, res, next) => next()),
+  verifyElevenLabsSignatureColtefinanciera: jest.fn((req, res, next) => next())
+}));
 jest.unstable_mockModule('../src/config/clients.js', () => ({
   s3: mockS3,
-  transporter: mockTransporter,
+  transporterColectora: mockTransporter,
+  transporterVidaDeudor: mockTransporter,
   supabaseVidaDeudor: mockSupabase,
-  supabaseColectora: {}, // Mock vacío si no se usa directamente en lo que probamos
+  supabaseColtefinancieraRecordatorios: {}, 
+  supabaseColectora: {}, 
 }));
 
 // 3. Importar dinámicamente app y supertest
@@ -47,9 +61,9 @@ describe('API Integration Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('GET /', () => {
+  describe('GET /health', () => {
     it('should return welcome message', async () => {
-      const res = await request(app).get('/');
+      const res = await request(app).get('/health');
       expect(res.statusCode).toEqual(200);
       expect(res.text).toContain('Ultim Tools API is running');
     });
@@ -173,6 +187,64 @@ describe('API Integration Tests', () => {
 
         expect(res.statusCode).toBe(200);
         expect(mockTransporter.sendMail).toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /api/v1/flamingo/get-debts', () => {
+    it('should pre-filter obligations with diasMora equal to 0, null, or empty string', async () => {
+      const mockAdminfoResponse = {
+        "informacion basica": {
+          "nombres": "JUAN PEREZ",
+          "celular_replegal": "3001234567"
+        },
+        "obligaciones": [
+          {
+            "numeroObligacion": "OBL-01",
+            "pago_min": "1000",
+            "diasMora": "10"
+          },
+          {
+            "numeroObligacion": "OBL-02",
+            "pago_min": "2000",
+            "diasMora": "0" 
+          },
+          {
+            "numeroObligacion": "OBL-03",
+            "pago_min": "3000",
+            "diasMora": "" 
+          },
+          {
+            "numeroObligacion": "OBL-04",
+            "pago_min": "4000"
+          },
+          {
+            "numeroObligacion": "OBL-05",
+            "pago_min": "0",
+            "diasMora": "5"
+          }
+        ],
+        "datos contacto": {
+          "telefonos": [
+            { "tipo": "CEL", "idContacto": "123", "telefono": "3001234567" }
+          ]
+        }
+      };
+
+      const { consultaClientesFlamingo } = await import('../src/services/flamingoService.js');
+      consultaClientesFlamingo.mockResolvedValueOnce(mockAdminfoResponse);
+
+      const res = await request(app)
+        .post('/api/v1/flamingo/get-debts')
+        .set('x-api-key', process.env.API_KEY || '12345')
+        .send({ tipoIdentificacion: "1", identificacion: "12345678" });
+
+      expect(res.statusCode).toBe(200);
+      
+      expect(res.body.total_obligaciones).toBe(2); // OBL-01 y OBL-05 cumplen diasMora>0
+      
+      // OBL-01 y OBL-05 cumplen >0 mora. Nhưng obligaciones_vencidas tambien evalua saldo > 0.
+      expect(res.body.obligaciones_vencidas.length).toBe(1);
+      expect(res.body.obligaciones_vencidas[0].idObligacion).toBe("OBL-01");
     });
   });
 

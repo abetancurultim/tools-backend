@@ -23,7 +23,8 @@ export const handleGetFlamingoDebts = async (req, res) => {
     
     const celularReplegal = infoBasica.celular_replegal || '';
 
-    const obligaciones = obligacionesRaw.map(obs => ({
+    const obligaciones = obligacionesRaw
+      .map(obs => ({
         idObligacion: obs.numeroObligacion || 'N/A',
         nombredoc: obs.nombredoc || 'Obligación',
         saldo_vencido: Number(obs.pago_min) || 0,
@@ -32,8 +33,9 @@ export const handleGetFlamingoDebts = async (req, res) => {
         cuotas_pendientes: Number(obs.cuotas_pendientes) || 0,
         fechvenci: obs.fechvenci || 'N/A',
         descripcion: obs.descripcion || '',
-        diasMora: Number(obs.pago_min) || 0
-    }));
+        diasMora: Number(obs.diasMora) || 0
+      }))
+      .filter(obs => obs.diasMora > 0);
 
     const obligacionesVencidas = obligaciones.filter(obs => obs.saldo_vencido > 0);
 

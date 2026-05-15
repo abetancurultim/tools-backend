@@ -3,7 +3,10 @@ import {
   ANDES_WSDL_TEST,
   ANDES_USER,
   ANDES_PASSWORD_SHA1,
+  ANDES_ALERT_EMAIL,
+  RESEND_FROM_EMAIL,
 } from "../config/env.js";
+import { resend } from "../config/clients.js";
 
 const maskSoapPassword = (xml = "") => {
   return xml.replace(
@@ -16,6 +19,32 @@ class AndesService {
   constructor() {
     this.client = null;
     this.wsdl = ANDES_WSDL_TEST;
+  }
+
+  async _notifyError(operacion, error, payload = null) {
+    try {
+      if (!resend) return;
+
+      const htmlContent = `
+        <h2>🚨 Alerta Crítica en Andes SCD</h2>
+        <p><strong>Operación:</strong> ${operacion}</p>
+        <p><strong>Fecha:</strong> ${new Date().toISOString()}</p>
+        <hr/>
+        <h3>Error Details:</h3>
+        <pre>${error?.message || JSON.stringify(error)}</pre>
+        ${payload ? `<h3>Payload (sanitizado):</h3><pre>${JSON.stringify(payload, null, 2)}</pre>` : ''}
+      `;
+
+      await resend.emails.send({
+        from: `Alertas Andes <${RESEND_FROM_EMAIL}>`,
+        to: [ANDES_ALERT_EMAIL],
+        subject: `🚨 Error en API Andes: ${operacion}`,
+        html: htmlContent,
+      });
+      console.log(`[AndesService] Alerta de error enviada a ${ANDES_ALERT_EMAIL}`);
+    } catch (notifyErr) {
+      console.error("[AndesService] Error al enviar notificación con Resend:", notifyErr.message);
+    }
   }
 
   async initClient() {
@@ -97,6 +126,7 @@ class AndesService {
         "[AndesService] Error en verificarEstadoServicio:",
         error.message,
       );
+      this._notifyError('verificarEstadoServicio', error);
       throw error;
     }
   }
@@ -143,6 +173,7 @@ class AndesService {
         "[AndesService] Error en solicitarCertificado:",
         error.message,
       );
+      this._notifyError('solicitarCertificado', error, datosFirmante);
       throw error;
     }
   }
@@ -195,6 +226,11 @@ class AndesService {
     } catch (error) {
       this.client = null;
       console.error("[AndesService] Error en firmarDocumento:", error.message);
+      
+      // Creamos un payload seguro excluyendo el adjunto base64 completo
+      const safePayload = { ...datosFirmante, adjunto: datosFirmante.adjunto ? '[BASE64_OMITIDO]' : undefined };
+      this._notifyError('firmarDocumento', error, safePayload);
+
       throw error;
     }
   }
@@ -228,6 +264,7 @@ class AndesService {
         "[AndesService] Error en descargarCertificado:",
         error.message,
       );
+      this._notifyError('descargarCertificado', error, { idSolicitud });
       throw error;
     }
   }

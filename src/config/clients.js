@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { S3Client } from '@aws-sdk/client-s3';
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -49,3 +50,7 @@ export const transporterVidaDeudor = nodemailer.createTransport({
     pass: process.env.SENDGRID_API_KEY_VIDADEUDOR,
   },
 });
+
+// --- Resend ---
+import { RESEND_KEY } from './env.js';
+export const resend = new Resend(RESEND_KEY);

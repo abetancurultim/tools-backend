@@ -49,6 +49,9 @@ jest.unstable_mockModule('../src/config/clients.js', () => ({
   supabaseVidaDeudor: mockSupabase,
   supabaseColtefinancieraRecordatorios: {}, 
   supabaseColectora: {}, 
+  resend: {
+    emails: { send: jest.fn().mockResolvedValue({ id: 'resend-123' }) }
+  }
 }));
 
 // 3. Importar dinámicamente app y supertest

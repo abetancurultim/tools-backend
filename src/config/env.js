@@ -24,3 +24,8 @@ export const ANDES_WSDL_TEST = process.env.ANDES_WSDL_TEST || 'https://test-circ
 export const ANDES_USER = process.env.ANDES_USER;
 export const ANDES_PASSWORD = process.env.ANDES_PASSWORD;
 export const ANDES_PASSWORD_SHA1 = process.env.ANDES_PASSWORD_SHA1;
+
+// Resend / Alertas
+export const RESEND_KEY = process.env.RESEND_KEY;
+export const ANDES_ALERT_EMAIL = process.env.ANDES_ALERT_EMAIL || 'alejandro.b@ultimmarketing.com';
+export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'notificacion@ultim.pro';

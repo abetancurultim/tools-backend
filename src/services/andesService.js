@@ -1,5 +1,6 @@
 import soap from "strong-soap";
 import {
+  ANDES_WSDL_PROD,
   ANDES_WSDL_TEST,
   ANDES_USER,
   ANDES_PASSWORD_SHA1,
@@ -18,6 +19,7 @@ const maskSoapPassword = (xml = "") => {
 class AndesService {
   constructor() {
     this.client = null;
+    // this.wsdl = ANDES_WSDL_PROD;
     this.wsdl = ANDES_WSDL_TEST;
   }
 
@@ -51,7 +53,7 @@ class AndesService {
     if (!this.client) {
       const soapClient = soap.soap;
       return new Promise((resolve, reject) => {
-        soapClient.createClient(this.wsdl, (err, client) => {
+        soapClient.createClient(this.wsdl, { timeout: 25000 }, (err, client) => {
           if (err) {
             console.error(
               "[AndesService] Error al inicializar el cliente SOAP:",
@@ -83,16 +85,29 @@ class AndesService {
 
           client.setSecurity(wsSecurity);
 
+          // Timeout por llamada (strong-soap lo expone en HttpClient)
+          if (client.HttpClient) {
+            client.HttpClient.options = {
+              ...client.HttpClient.options,
+              timeout: 25000,
+            };
+          }
+
           this.client = client;
 
-          // debug request
           client.on("request", (requestHtml) => {
             const safeRequest = maskSoapPassword(requestHtml);
             console.log("[SOAP-DEBUG] Request XML Enviado:\n", safeRequest);
           });
 
+          client.on("response", (body) => {
+            // Truncamos para no volcar el base64 completo en logs
+            const truncated = typeof body === "string" ? body.substring(0, 800) : JSON.stringify(body).substring(0, 800);
+            console.log("[SOAP-DEBUG] Response recibido (primeros 800 chars):\n", truncated);
+          });
+
           console.log(
-            "[AndesService] SOAP Client inicializado para ambiente de pruebas.",
+            "[AndesService] SOAP Client inicializado.",
           );
           resolve(client);
         });
@@ -161,10 +176,11 @@ class AndesService {
             this.client = null;
             return reject(err);
           }
-          resolve({
-            estado: result.estado,
-            mensaje: result.mensaje,
-          });
+          const respuesta = { estado: result.estado, mensaje: result.mensaje };
+          if (respuesta.estado !== 0) {
+            this._notifyError(`solicitarCertificado [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), datosFirmante);
+          }
+          resolve(respuesta);
         });
       });
     } catch (error) {
@@ -216,11 +232,14 @@ class AndesService {
               new Error("Andes devolvió respuesta vacía (result undefined)"),
             );
           }
-          resolve({
-            estado: result.estado,
-            mensaje: result.mensaje,
-            id: result.id,
-          });
+          console.log("[ANDES-DEBUG] firmarDocumento keys:", Object.keys(result || {}));
+          console.log("[ANDES-DEBUG] estado:", result?.estado, "| id:", result?.id);
+          const respuesta = { estado: result.estado, mensaje: result.mensaje, id: result.id };
+          if (respuesta.estado !== 0) {
+            const safePayload = { ...datosFirmante, adjunto: '[BASE64_OMITIDO]' };
+            this._notifyError(`firmarDocumento [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), safePayload);
+          }
+          resolve(respuesta);
         });
       });
     } catch (error) {
@@ -251,10 +270,14 @@ class AndesService {
               this.client = null;
               return reject(err);
             }
-            resolve({
-              estado: result.estado,
-              mensaje: result.mensaje,
-            });
+            // Log para diagnosticar qué campos devuelve Andes realmente
+            console.log("[ANDES-DEBUG] descargarCertificado keys:", Object.keys(result || {}));
+            console.log("[ANDES-DEBUG] estado:", result?.estado, "| mensaje (100c):", String(result?.mensaje || "").substring(0, 100));
+            const respuesta = { estado: result.estado, mensaje: result.mensaje };
+            if (respuesta.estado !== 0) {
+              this._notifyError(`descargarCertificado [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), { idSolicitud });
+            }
+            resolve(respuesta);
           },
         );
       });

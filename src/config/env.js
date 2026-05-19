@@ -21,6 +21,7 @@ export const FLAMINGO_PASS = process.env.FLAMINGO_PASS || '49wGr$a9D2g@';
 
 // Andes SCD
 export const ANDES_WSDL_TEST = process.env.ANDES_WSDL_TEST || 'https://test-circuitodefirmado.andesscd.com.co/WS/FE/wsdl.php?wsdl';
+export const ANDES_WSDL_PROD = process.env.ANDES_WSDL_PROD || 'https://circuitodefirmado.andesscd.com.co/WS/FE/wsdl.php?wsdl';
 export const ANDES_USER = process.env.ANDES_USER;
 export const ANDES_PASSWORD = process.env.ANDES_PASSWORD;
 export const ANDES_PASSWORD_SHA1 = process.env.ANDES_PASSWORD_SHA1;

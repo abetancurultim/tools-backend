@@ -19,8 +19,8 @@ const maskSoapPassword = (xml = "") => {
 class AndesService {
   constructor() {
     this.client = null;
-    // this.wsdl = ANDES_WSDL_PROD;
-    this.wsdl = ANDES_WSDL_TEST;
+    this.wsdl = ANDES_WSDL_PROD;
+    // this.wsdl = ANDES_WSDL_TEST;
   }
 
   async _notifyError(operacion, error, payload = null) {
@@ -72,8 +72,8 @@ class AndesService {
 
           const options = {
             hasTimeStamp: false,
-            hasTokenCreated: false,
-            hasNonce: false,
+            hasTokenCreated: true,
+            hasNonce: true,
             passwordType: "PasswordText",
           };
 

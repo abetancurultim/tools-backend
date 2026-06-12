@@ -10,7 +10,7 @@ PS C:\Users\alejo\Desktop\Desarrollo\backend\tools-backend> node scripts/test-an
   ANDES_USER        : "caren.mejia" ✓
   ANDES_PASSWORD    : [10 chars] ✓
   ANDES_PASSWORD_SHA1: [124 chars] ✓
-
+ 
 [2] SHA1(ANDES_PASSWORD) calculado localmente (base64): FsYZvzKYf0DbCxTtnQV92OGIu9c=
   ¿Coincide con ANDES_PASSWORD_SHA1? ❌ NO — valores distintos
   Decodificando ANDES_PASSWORD_SHA1 como base64 → "bwLmFGG/smm1Msdmnnke/JRaYKxhA3..."

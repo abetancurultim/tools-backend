@@ -39,7 +39,7 @@ class AndesService {
 
       await resend.emails.send({
         from: `Alertas Andes <${RESEND_FROM_EMAIL}>`,
-        to: [ANDES_ALERT_EMAIL],
+        to: ["alejandro.b@ultimmarketing.com", "legal@ultimmarketing.com"],
         subject: `🚨 Error en API Andes: ${operacion}`,
         html: htmlContent,
       });

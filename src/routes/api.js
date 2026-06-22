@@ -27,6 +27,8 @@ import {
 } from '../controllers/andesController.js';
 
 import { protectRoute, verifyElevenLabsSignature, verifyElevenLabsSignatureColtefinanciera } from '../middlewares/auth.js';
+import { iniciarTransferencia } from '../controllers/transferenciaController.js';
+import { recibirResultadoAMD } from '../webhooks/twilioAmdWebhook.js';
 
 const router = Router();
 
@@ -74,5 +76,11 @@ router.post('/andes/test-connection', protectRoute, verificarEstado);
 router.post('/andes/solicitar-firma', protectRoute, solicitarFirma);
 router.post('/andes/confirmar-firma-otp', protectRoute, confirmarFirma);
 router.get('/andes/testigo/:idSolicitud', protectRoute, consultarTestigo);
+
+// Transferencia con AMD — Server tool de ElevenLabs
+router.post('/transferencia/iniciar', iniciarTransferencia);
+
+// Webhook AMD — Twilio notifica el resultado de la llamada al abogado
+router.post('/webhooks/twilio-amd', recibirResultadoAMD);
 
 export default router;

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles",
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon --no-stdin src/index.js"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +23,8 @@
     "nodemailer": "^7.0.12",
     "pdf2json": "^4.0.2",
     "resend": "^6.12.3",
-    "strong-soap": "^5.0.8"
+    "strong-soap": "^5.0.8",
+    "twilio": "^6.0.2"
   },
   "devDependencies": {
     "jest": "^30.2.0",

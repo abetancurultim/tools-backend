@@ -30,3 +30,12 @@ export const ANDES_PASSWORD_SHA1 = process.env.ANDES_PASSWORD_SHA1;
 export const RESEND_KEY = process.env.RESEND_KEY;
 export const ANDES_ALERT_EMAIL = process.env.ANDES_ALERT_EMAIL || 'alejandro.b@ultimmarketing.com';
 export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'notificacion@ultim.pro';
+
+// Twilio - Transferencia con AMD
+export const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+export const TWILIO_AUTH_TOKEN   = process.env.TWILIO_AUTH_TOKEN;
+export const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+export const BASE_URL            = process.env.BASE_URL || 'http://localhost:3002/api/v1';
+
+// ElevenLabs API Key (para notificar al agente activo)
+export const ELEVENLABS_API_KEY  = process.env.ELEVENLABS_API_KEY;

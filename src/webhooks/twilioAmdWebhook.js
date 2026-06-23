@@ -28,7 +28,7 @@ export async function recibirResultadoAMD(req, res) {
     clearTimeout(pendiente.timer);
     transferenciasPendientes.delete(CallSid);
     console.log('[Transferencia] Abogado contestó — uniendo en conferencia');
-    pendiente.resolve({ resultado: 'conectado' });
+    pendiente.resolve({ resultado: 'conectado', answered_by: AnsweredBy });
 
     // Tras un breve margen (para que el agente alcance a hablar), unimos ambas patas.
     setTimeout(async () => {
@@ -52,7 +52,11 @@ export async function recibirResultadoAMD(req, res) {
     } catch (err) {
       // La llamada ya pudo haber terminado (no-answer); no es un error real.
     }
-    pendiente.resolve({ resultado: 'no_disponible', motivo: esBuzon ? 'buzon' : (CallStatus || 'no_contesto') });
+    pendiente.resolve({
+      resultado: 'no_disponible',
+      motivo: esBuzon ? 'buzon' : (CallStatus || 'no_contesto'),
+      answered_by: AnsweredBy || null,
+    });
   }
 
   return res.status(200).set('Content-Type', 'text/xml').send('<Response></Response>');

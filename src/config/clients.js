@@ -21,6 +21,11 @@ const supabaseUrlColtefinancieraRecordatorios = process.env.SUPABASE_URL_COLTEFI
 const supabaseKeyColtefinancieraRecordatorios = process.env.SUPABASE_KEY_COLTEFINANCIERA_RECORDATORIOS;
 export const supabaseColtefinancieraRecordatorios = createClient(supabaseUrlColtefinancieraRecordatorios, supabaseKeyColtefinancieraRecordatorios);
 
+// --- Supabase Call Center (log de transferencias) ---
+const supabaseUrlCallCenter = process.env.SUPABASE_URL_CALL_CENTER;
+const supabaseKeyCallCenter = process.env.SUPABASE_KEY_CALL_CENTER;
+export const supabaseCallCenter = createClient(supabaseUrlCallCenter, supabaseKeyCallCenter);
+
 // --- AWS S3 ---
 export const s3 = new S3Client({
   region: process.env.AWS_REGION_COLECTORA || 'us-east-1',

@@ -39,3 +39,7 @@ export const BASE_URL            = process.env.BASE_URL || 'http://localhost:300
 
 // ElevenLabs API Key (para notificar al agente activo)
 export const ELEVENLABS_API_KEY  = process.env.ELEVENLABS_API_KEY;
+
+// Supabase Call Center (log de transferencias) — usar la service_role key
+export const SUPABASE_URL_CALL_CENTER = process.env.SUPABASE_URL_CALL_CENTER;
+export const SUPABASE_KEY_CALL_CENTER = process.env.SUPABASE_KEY_CALL_CENTER;

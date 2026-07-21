@@ -1,5 +1,6 @@
 import { marcarAbogadoConAMD } from '../services/twilioService.js';
 import { registrarTransferencia } from '../services/transferLogService.js';
+import { obtenerDirectorio } from '../services/directorioService.js';
 import { BASE_URL } from '../config/env.js';
 
 // callSid (del abogado) -> { resolve, timer, leadCallSid, conferenceName, ...datos }
@@ -62,8 +63,8 @@ export async function iniciarTransferencia(req, res) {
       telefono_lead,
       nombre_lead,
       motivo,
-      lead_call_sid,
       lawyer_call_sid: callSid,
+      lead_call_sid,
       conference_name: conferenceName,
     });
 
@@ -86,5 +87,23 @@ export async function iniciarTransferencia(req, res) {
       conference_name: conferenceName,
     });
     return res.status(500).json({ resultado: 'no_disponible', motivo: 'error_interno' });
+  }
+}
+
+/**
+ * Server tool invocado por el agente ANTES de transferir.
+ * Devuelve el directorio de abogados por servicio del cliente para que el LLM elija
+ * a qué número transferir según la necesidad del cliente.
+ */
+export async function consultarDirectorio(req, res) {
+  const { client_id } = req.body;
+  if (!client_id) return res.status(400).json({ error: 'client_id es requerido' });
+
+  try {
+    const servicios = await obtenerDirectorio(client_id);
+    return res.status(200).json({ servicios });
+  } catch (error) {
+    console.error('Error consultando directorio:', error);
+    return res.status(500).json({ error: 'Error consultando el directorio' });
   }
 }

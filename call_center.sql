@@ -241,8 +241,8 @@ CREATE TABLE public.cc_call_transfers (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   client_id uuid NOT NULL,
   resultado text NOT NULL CHECK (resultado = ANY (ARRAY['conectado'::text, 'no_disponible'::text])),
-  motivo_no_disponible text,        -- 'buzon' | 'no-answer' | 'busy' | 'failed' | 'timeout' | 'error_interno'
-  answered_by text,                 -- valor crudo del AMD: human, machine_start, fax, etc.
+  motivo_no_disponible text,
+  answered_by text,
   numero_abogado text,
   numero_lead text,
   telefono_lead text,
@@ -255,13 +255,40 @@ CREATE TABLE public.cc_call_transfers (
   CONSTRAINT cc_call_transfers_pkey PRIMARY KEY (id),
   CONSTRAINT cc_call_transfers_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.call_center_clients(id)
 );
-CREATE INDEX idx_cc_call_transfers_client_id ON public.cc_call_transfers(client_id);
-CREATE INDEX idx_cc_call_transfers_created_at ON public.cc_call_transfers(created_at DESC);
+CREATE TABLE public.cc_transfer_lawyers (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  client_id uuid NOT NULL,
+  name text NOT NULL,
+  phone text NOT NULL,            -- E.164, ej: +57...
+  email text,
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT cc_transfer_lawyers_pkey PRIMARY KEY (id),
+  CONSTRAINT cc_transfer_lawyers_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.call_center_clients(id)
+);
+CREATE TABLE public.cc_transfer_services (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  client_id uuid NOT NULL,
+  lawyer_id uuid NOT NULL,
+  name text NOT NULL,             -- ej: "Accidentes de automóvil"
+  description text,               -- qué cubre, para que el LLM entienda
+  keywords text,                  -- sinónimos/disparadores: "choque, colisión, atropello"
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT cc_transfer_services_pkey PRIMARY KEY (id),
+  CONSTRAINT cc_transfer_services_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.call_center_clients(id),
+  CONSTRAINT cc_transfer_services_lawyer_id_fkey FOREIGN KEY (lawyer_id) REFERENCES public.cc_transfer_lawyers(id)
+);
+CREATE INDEX idx_cc_transfer_lawyers_client ON public.cc_transfer_lawyers(client_id);
+CREATE INDEX idx_cc_transfer_services_client ON public.cc_transfer_services(client_id);
 
--- GRANTS obligatorios (desde may/oct 2026 las tablas nuevas en 'public' no se exponen
--- al Data API / supabase-js sin grant explícito).
-grant select on public.cc_call_transfers to anon;
-grant select, insert, update, delete on public.cc_call_transfers to authenticated;
-grant select, insert, update, delete on public.cc_call_transfers to service_role;
+-- GRANTS obligatorios (Data API / supabase-js)
+grant select on public.cc_transfer_lawyers to anon;
+grant select, insert, update, delete on public.cc_transfer_lawyers to authenticated;
+grant select, insert, update, delete on public.cc_transfer_lawyers to service_role;
+grant select on public.cc_transfer_services to anon;
+grant select, insert, update, delete on public.cc_transfer_services to authenticated;
+grant select, insert, update, delete on public.cc_transfer_services to service_role;
 
-alter table public.cc_call_transfers enable row level security;
+alter table public.cc_transfer_lawyers enable row level security;
+alter table public.cc_transfer_services enable row level security;

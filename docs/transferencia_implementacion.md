@@ -55,6 +55,7 @@ Patrón del proyecto: `routes → controllers → services` + `webhooks`. ES Mod
 | [src/controllers/transferenciaController.js](../src/controllers/transferenciaController.js) | Server tool síncrono. Marca, espera el veredicto y lo devuelve al agente. Mantiene el estado en memoria. |
 | [src/webhooks/twilioAmdWebhook.js](../src/webhooks/twilioAmdWebhook.js) | Recibe el veredicto de Twilio. Une en conferencia (éxito) o cuelga (fallo) y resuelve la espera. |
 | [src/services/transferLogService.js](../src/services/transferLogService.js) | Inserta el log de cada transferencia en Supabase (call center). Fire-and-forget. |
+| [src/services/directorioService.js](../src/services/directorioService.js) | Consulta el directorio de abogados por servicio del cliente (Supabase). |
 | [src/routes/api.js](../src/routes/api.js) | Registra las dos rutas. |
 | [src/config/env.js](../src/config/env.js) | Variables Twilio + `BASE_URL` + Supabase call center. |
 | [src/config/clients.js](../src/config/clients.js) | Instancia `supabaseCallCenter`. |
@@ -142,16 +143,67 @@ al tool como la variable dinámica **`system__call_sid`**.
 
 ---
 
-## Configuración del Server Tool en ElevenLabs
+## Directorio de abogados por servicio (ruteo)
+
+El agente no transfiere a un abogado fijo: primero consulta el **directorio** del cliente y el
+LLM elige a quién transferir según el caso. Dos tablas en el proyecto Supabase del call center:
+
+- `cc_transfer_lawyers` — abogados del cliente (`name`, `phone` en E.164, `active`).
+- `cc_transfer_services` — servicios/áreas; cada uno apunta a un abogado (`lawyer_id`) y trae
+  `description` + `keywords` para que el LLM matchee con precisión.
+
+Endpoint: `POST /api/v1/transferencia/directorio` con `{ client_id }` →
+[directorioService.js](../src/services/directorioService.js) devuelve una lista plana:
+
+```json
+{ "servicios": [
+  { "servicio": "Accidentes de automóvil",
+    "descripcion": "Choques, colisiones y lesiones en accidentes de tránsito",
+    "palabras_clave": "choque, colisión, accidente de carro, atropello",
+    "abogado": "Dr. Accidentes", "numero_abogado": "+573146115258" }
+] }
+```
+
+El LLM elige el `numero_abogado` del servicio que coincide y se lo pasa a
+`transferir_a_abogado`. Un abogado puede cubrir varios servicios (FK `lawyer_id`).
+
+---
+
+## Configuración de los Server Tools en ElevenLabs
+
+Son **dos** tools: primero `consultar_directorio_abogados` (elige el abogado), luego
+`transferir_a_abogado` (hace la transferencia).
+
+### Tool 1 — `consultar_directorio_abogados` (previo a transferir)
+
+| Campo | Valor |
+|---|---|
+| Name | `consultar_directorio_abogados` |
+| Method | `POST` |
+| URL | `https://TU-DOMINIO/api/v1/transferencia/directorio` |
+| Response timeout | default (~20s) |
+| Description | Devuelve el directorio de abogados por servicio del cliente. El LLM debe elegir el `numero_abogado` cuyo servicio coincida con la necesidad del cliente. |
+
+Body param: `client_id` (Constant = UUID del cliente en `call_center_clients`).
+
+Respuesta:
+```json
+{ "servicios": [
+  { "servicio": "...", "descripcion": "...", "palabras_clave": "...",
+    "abogado": "...", "numero_abogado": "+57..." }
+] }
+```
+
+### Tool 2 — `transferir_a_abogado`
 
 **Tipo:** Webhook tool
 
 | Campo | Valor |
 |---|---|
 | Name | `transferir_a_abogado` |
-| Method | `POST` |
 | URL | `https://TU-DOMINIO/api/v1/transferencia/iniciar` |
 | Response timeout | `120` segundos |
+| Method | `POST` |
 | Disable interruptions | ✅ |
 | Tool call sound | música de espera (ej: "Elevator Music 2") |
 | Error handling | configurar para que un fallo del tool degrade al mensaje de respaldo |
@@ -160,16 +212,16 @@ al tool como la variable dinámica **`system__call_sid`**.
 
 | Identifier | Tipo | Value Type | Valor / Fuente |
 |---|---|---|---|
-| `numero_abogado` | string | Constant (o LLM en prod) | `+57...` |
+| `numero_abogado` | string | **LLM Prompt** | el número elegido del directorio según el servicio del cliente |
 | `numero_lead` | string | Dynamic Variable | `system__caller_id` |
 | `lead_call_sid` | string | Dynamic Variable | `system__call_sid` |
 | `client_id` | string | Constant | `<UUID del cliente en call_center_clients>` |
 | `nombre_lead` | string | LLM Prompt | nombre del cliente |
 | `motivo` | string | LLM Prompt | motivo de la consulta |
 
-> `client_id` es el UUID del cliente en `call_center_clients`. Se configura como **Constant**
-> en el tool de cada agente (cada agente pertenece a un cliente). Así, un cliente nuevo solo
-> necesita su propio tool con su `client_id`, sin tocar código.
+> `numero_abogado` ahora lo provee el LLM (lo toma de `consultar_directorio_abogados`), no es
+> constante. `client_id` sigue siendo Constant por agente (cada agente = un cliente); así un
+> cliente nuevo solo necesita su propio tool con su `client_id`, sin tocar código.
 
 **Respuestas del tool:**
 ```json
@@ -180,9 +232,12 @@ al tool como la variable dinámica **`system__call_sid`**.
 ### Prompt del agente (fragmento)
 
 ```
-Al transferir:
-1. Di: "Perfecto, en un momento lo conecto con el asesor disponible."
-2. Llama a la herramienta transferir_a_abogado y espera su resultado.
+1. Recopila nombre, teléfono y el motivo/tipo de caso del cliente.
+2. Llama a consultar_directorio_abogados.
+3. Elige del directorio el servicio que mejor coincida con la necesidad del cliente y toma su
+   numero_abogado. Si ninguno coincide con claridad, repregunta para precisar.
+4. Di: "Perfecto, en un momento lo conecto con el asesor disponible."
+5. Llama a transferir_a_abogado pasando el numero_abogado elegido. Según el resultado:
    - "conectado"     → di solo "Lo comunico ahora mismo, un momento." (frase breve)
    - "no_disponible" → di: "El asesor no se encuentra disponible en este momento.
      Le enviaremos una notificación para que lo contacte a la brevedad. Gracias por

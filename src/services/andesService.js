@@ -8,13 +8,20 @@ import {
   RESEND_FROM_EMAIL,
 } from "../config/env.js";
 import { resend } from "../config/clients.js";
+import { TEST_EMAIL } from "./elevenLabsLibranzaTestRouting.js";
 
 const maskSoapPassword = (xml = "") => {
-  return xml.replace(
+  return String(xml).replace(
     /(<wsse:Password[^>]*>)([\s\S]*?)(<\/wsse:Password>)/g,
     "$1***$3",
-  );
+  ).replace(/(<(?:\w+:)?(?:CodigoOTP|Adjunto|Correo|Celular|Documento)\b[^>]*>)[\s\S]*?(<\/(?:\w+:)?(?:CodigoOTP|Adjunto|Correo|Celular|Documento)>)/gi, '$1***$2');
 };
+
+const safeAlertPayload = payload => payload ? Object.fromEntries(
+  Object.entries(payload).map(([key, value]) => [key,
+    /^(codigoOTP|correo|celular|documento|adjunto)$/i.test(key) ? '***' : value,
+  ]),
+) : null;
 
 class AndesService {
   constructor() {
@@ -33,13 +40,15 @@ class AndesService {
         <p><strong>Fecha:</strong> ${new Date().toISOString()}</p>
         <hr/>
         <h3>Error Details:</h3>
-        <pre>${error?.message || JSON.stringify(error)}</pre>
-        ${payload ? `<h3>Payload (sanitizado):</h3><pre>${JSON.stringify(payload, null, 2)}</pre>` : ''}
+        <pre>${maskSoapPassword(error?.message || String(error))}</pre>
+        ${payload ? `<h3>Payload (sanitizado):</h3><pre>${JSON.stringify(safeAlertPayload(payload), null, 2)}</pre>` : ''}
       `;
 
       await resend.emails.send({
         from: `Alertas Andes <${RESEND_FROM_EMAIL}>`,
-        to: ["alejandro.b@ultimmarketing.com", "legal@ultimmarketing.com"],
+        to: payload?.pilotElevenLabsLibranza
+          ? [TEST_EMAIL]
+          : ["alejandro.b@ultimmarketing.com", "legal@ultimmarketing.com"],
         subject: `🚨 Error en API Andes: ${operacion}`,
         html: htmlContent,
       });
@@ -100,10 +109,8 @@ class AndesService {
             console.log("[SOAP-DEBUG] Request XML Enviado:\n", safeRequest);
           });
 
-          client.on("response", (body) => {
-            // Truncamos para no volcar el base64 completo en logs
-            const truncated = typeof body === "string" ? body.substring(0, 800) : JSON.stringify(body).substring(0, 800);
-            console.log("[SOAP-DEBUG] Response recibido (primeros 800 chars):\n", truncated);
+          client.on("response", () => {
+            console.log("[SOAP-DEBUG] Respuesta recibida de Andes");
           });
 
           console.log(
@@ -236,8 +243,7 @@ class AndesService {
           console.log("[ANDES-DEBUG] estado:", result?.estado, "| id:", result?.id);
           const respuesta = { estado: result.estado, mensaje: result.mensaje, id: result.id };
           if (respuesta.estado !== 0) {
-            const safePayload = { ...datosFirmante, adjunto: '[BASE64_OMITIDO]' };
-            this._notifyError(`firmarDocumento [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), safePayload);
+            this._notifyError(`firmarDocumento [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), safeAlertPayload(datosFirmante));
           }
           resolve(respuesta);
         });
@@ -247,14 +253,13 @@ class AndesService {
       console.error("[AndesService] Error en firmarDocumento:", error.message);
       
       // Creamos un payload seguro excluyendo el adjunto base64 completo
-      const safePayload = { ...datosFirmante, adjunto: datosFirmante.adjunto ? '[BASE64_OMITIDO]' : undefined };
-      this._notifyError('firmarDocumento', error, safePayload);
+      this._notifyError('firmarDocumento', error, safeAlertPayload(datosFirmante));
 
       throw error;
     }
   }
 
-  async descargarCertificado(idSolicitud) {
+  async descargarCertificado(idSolicitud, options = {}) {
     try {
       const client = await this.initClient();
 
@@ -272,10 +277,10 @@ class AndesService {
             }
             // Log para diagnosticar qué campos devuelve Andes realmente
             console.log("[ANDES-DEBUG] descargarCertificado keys:", Object.keys(result || {}));
-            console.log("[ANDES-DEBUG] estado:", result?.estado, "| mensaje (100c):", String(result?.mensaje || "").substring(0, 100));
+            console.log("[ANDES-DEBUG] estado:", result?.estado);
             const respuesta = { estado: result.estado, mensaje: result.mensaje };
             if (respuesta.estado !== 0) {
-              this._notifyError(`descargarCertificado [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), { idSolicitud });
+              this._notifyError(`descargarCertificado [estado ${respuesta.estado}]`, new Error(respuesta.mensaje), { idSolicitud, ...options });
             }
             resolve(respuesta);
           },
@@ -287,7 +292,7 @@ class AndesService {
         "[AndesService] Error en descargarCertificado:",
         error.message,
       );
-      this._notifyError('descargarCertificado', error, { idSolicitud });
+      this._notifyError('descargarCertificado', error, { idSolicitud, ...options });
       throw error;
     }
   }

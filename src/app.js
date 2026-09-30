@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import apiRoutes from './routes/api.js';
+import elevenLabsLibranzaRoutes from './routes/elevenLabsLibranzaRoutes.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json({
 }));
 
 app.use('/api/v1', apiRoutes);
+app.use('/api/v1/elevenlabs/libranzas', elevenLabsLibranzaRoutes);
 
 app.get('/health', (req, res) => res.send('Ultim Tools API is running 🚀'));
 
